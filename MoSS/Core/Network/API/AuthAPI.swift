@@ -7,6 +7,8 @@ enum AuthAPI: Endpoint {
     case signUpBusiness(BusinessSignUpRequest)
     case sendEmail(SendEmailRequest)
     case verifyEmail(VerifyEmailRequest)
+    case findID(FindIDRequest)
+    case resetPassword(ResetPasswordRequest)
 
     var path: String {
         switch self {
@@ -16,13 +18,17 @@ enum AuthAPI: Endpoint {
         case .signUpBusiness: return "/auth/signup/business"
         case .sendEmail: return "/auth/send-email"
         case .verifyEmail: return "/auth/verify-email"
+        case .findID: return "/auth/find-id"
+        case .resetPassword: return "/auth/reset-password"
         }
     }
 
     var method: HTTPMethod {
         switch self {
-        case .login, .logout, .signUpStudent, .signUpBusiness, .sendEmail, .verifyEmail:
+        case .login, .logout, .signUpStudent, .signUpBusiness, .sendEmail, .verifyEmail, .findID:
             return .post
+        case .resetPassword:
+            return .patch
         }
     }
 
@@ -34,6 +40,8 @@ enum AuthAPI: Endpoint {
         case .signUpBusiness(let request): return request
         case .sendEmail(let request): return request
         case .verifyEmail(let request): return request
+        case .findID(let request): return request
+        case .resetPassword(let request): return request
         }
     }
 

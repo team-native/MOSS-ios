@@ -18,15 +18,27 @@ enum Validator {
 
     /// 비밀번호 6~15자, 영문·숫자·특수문자 각 1개 이상
     static func isValidPassword(_ password: String) -> Bool {
-        guard (6...15).contains(password.count) else { return false }
-        let hasLetter = password.range(of: "[A-Za-z]", options: .regularExpression) != nil
-        let hasNumber = password.range(of: "[0-9]", options: .regularExpression) != nil
-        let hasSymbol = password.range(of: "[^A-Za-z0-9\\s]", options: .regularExpression) != nil
-        return hasLetter && hasNumber && hasSymbol
+        hasValidPasswordLength(password) && hasLetterAndNumber(password) && hasSymbol(password)
     }
 
     /// 인증번호 숫자 6자리
     static func isValidVerificationCode(_ code: String) -> Bool {
         code.range(of: #"^[0-9]{6}$"#, options: .regularExpression) != nil
+    }
+}
+
+// 새 비밀번호 설정 화면의 조건 체크 목록용
+extension Validator {
+    static func hasValidPasswordLength(_ password: String) -> Bool {
+        (6...15).contains(password.count)
+    }
+
+    static func hasLetterAndNumber(_ password: String) -> Bool {
+        password.range(of: "[A-Za-z]", options: .regularExpression) != nil
+            && password.range(of: "[0-9]", options: .regularExpression) != nil
+    }
+
+    static func hasSymbol(_ password: String) -> Bool {
+        password.range(of: "[^A-Za-z0-9\\s]", options: .regularExpression) != nil
     }
 }
