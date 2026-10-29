@@ -1,13 +1,19 @@
 import SwiftUI
 
 struct RootView: View {
-    var body: some View {
-        ZStack {
-            Color.mossBackground
-                .ignoresSafeArea()
+    @StateObject private var session = SessionManager()
 
-            MoSSLogo()
+    var body: some View {
+        Group {
+            switch session.state {
+            case .loggedOut:
+                LoginView()
+            case .guest, .loggedIn:
+                HomeView()
+            }
         }
+        .environmentObject(session)
+        .animation(.default, value: session.state)
     }
 }
 
