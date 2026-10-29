@@ -1,10 +1,7 @@
 import SwiftUI
 
 struct SignUpView: View {
-    /// 가입 완료 시 가입한 이메일을 로그인 화면에 전달
-    var onCompleted: (String) -> Void = { _ in }
-
-    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var router: AuthRouter
     @StateObject private var viewModel = SignUpViewModel()
     @FocusState private var focusedField: Field?
 
@@ -63,8 +60,7 @@ struct SignUpView: View {
         }
         .alert("회원가입이 완료되었어요", isPresented: .constant(viewModel.isCompleted)) {
             Button("로그인하러 가기") {
-                onCompleted(viewModel.trimmedEmail)
-                dismiss()
+                router.popToLogin(email: viewModel.trimmedEmail)
             }
         } message: {
             Text("가입한 이메일로 로그인해 주세요.")
@@ -203,4 +199,5 @@ struct SignUpView: View {
     NavigationStack {
         SignUpView()
     }
+    .environmentObject(AuthRouter())
 }
