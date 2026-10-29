@@ -2,7 +2,12 @@ import SwiftUI
 
 struct RootView: View {
     var body: some View {
-        Text("MoSS")
+        ZStack {
+            Color.mossBackground
+                .ignoresSafeArea()
+
+            MoSSLogo()
+        }
     }
 }
 
