@@ -30,7 +30,11 @@ struct LoginView: View {
             .background(Color.mossBackground.ignoresSafeArea())
             .navigationDestination(for: AuthRoute.self) { route in
                 switch route {
-                case .signUp: SignUpView()
+                case .signUp:
+                    SignUpView { email in
+                        viewModel.email = email
+                        viewModel.password = ""
+                    }
                 case .findID: FindIDView()
                 }
             }
