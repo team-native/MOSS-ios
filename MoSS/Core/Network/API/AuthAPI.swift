@@ -3,17 +3,26 @@ import Foundation
 enum AuthAPI: Endpoint {
     case login(LoginRequest)
     case logout
+    case signUpStudent(StudentSignUpRequest)
+    case signUpBusiness(BusinessSignUpRequest)
+    case sendEmail(SendEmailRequest)
+    case verifyEmail(VerifyEmailRequest)
 
     var path: String {
         switch self {
         case .login: return "/auth/login"
         case .logout: return "/auth/logout"
+        case .signUpStudent: return "/auth/signup/student"
+        case .signUpBusiness: return "/auth/signup/business"
+        case .sendEmail: return "/auth/send-email"
+        case .verifyEmail: return "/auth/verify-email"
         }
     }
 
     var method: HTTPMethod {
         switch self {
-        case .login, .logout: return .post
+        case .login, .logout, .signUpStudent, .signUpBusiness, .sendEmail, .verifyEmail:
+            return .post
         }
     }
 
@@ -21,13 +30,17 @@ enum AuthAPI: Endpoint {
         switch self {
         case .login(let request): return request
         case .logout: return nil
+        case .signUpStudent(let request): return request
+        case .signUpBusiness(let request): return request
+        case .sendEmail(let request): return request
+        case .verifyEmail(let request): return request
         }
     }
 
     var requiresAuth: Bool {
         switch self {
-        case .login: return false
         case .logout: return true
+        default: return false
         }
     }
 }

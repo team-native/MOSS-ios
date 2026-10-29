@@ -9,5 +9,8 @@ struct APIResponse<T: Decodable>: Decodable {
     let data: T?
 }
 
-/// data가 null이거나 쓰지 않는 응답에 사용
-struct EmptyData: Decodable {}
+/// data를 쓰지 않는 응답에 사용. data 형태와 상관없이 디코딩에 성공한다.
+struct EmptyData: Decodable {
+    init() {}
+    init(from decoder: Decoder) throws {}
+}
