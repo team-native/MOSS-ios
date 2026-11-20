@@ -8,15 +8,15 @@ struct HomeView: View {
     private let places = Place.preview
 
     var body: some View {
-        VStack(spacing: 0) {
+        Group {
             if selectedTab == "홈" {
                 homeContent
             } else {
                 ComingSoonView(title: selectedTab)
             }
-            bottomNavigation
         }
         .background(Color.mossBackground.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom, spacing: 0) { bottomNavigation }
     }
 
     private var homeContent: some View {
