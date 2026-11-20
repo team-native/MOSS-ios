@@ -1,24 +1,288 @@
 import SwiftUI
 
-// TODO: 메인 이슈에서 지도·목록 화면으로 교체
 struct HomeView: View {
     @EnvironmentObject private var session: SessionManager
+    @State private var selectedTab = "홈"
+    @State private var searchText = ""
+
+    private let places = Place.preview
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                ComingSoonView(title: "메인")
-
-                MoSSButton(
-                    title: session.isGuest ? "로그인하러 가기" : "로그아웃",
-                    style: .secondary
-                ) {
-                    Task { await session.logout() }
-                }
-                .padding(.horizontal, Layout.screenPadding)
-                .padding(.bottom, 24)
+        Group {
+            if selectedTab == "홈" {
+                homeContent
+            } else {
+                ComingSoonView(title: selectedTab)
             }
-            .background(Color.mossBackground.ignoresSafeArea())
+        }
+        .background(Color.mossBackground.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom, spacing: 0) { bottomNavigation }
+    }
+
+    private var homeContent: some View {
+        VStack(spacing: 0) {
+            mapSection
+            nearbySection
         }
     }
+
+    private var mapSection: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                Image("HomeMap")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .accessibilityHidden(true)
+
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("9:41").font(.system(size: 14, weight: .bold))
+                        Spacer()
+                        HStack(spacing: 5) {
+                            Image(systemName: "cellularbars")
+                            Image(systemName: "wifi")
+                            Image(systemName: "battery.100")
+                        }
+                        .font(.system(size: 14, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.mossTextPrimary)
+                    .padding(.horizontal, 24)
+                    .frame(height: 60)
+
+                    HStack(spacing: 10) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "magnifyingglass").foregroundStyle(Color.mossBrandSage)
+                            TextField("내 주변 조용한 공부 스팟 검색", text: $searchText)
+                                .font(.system(size: 13))
+                                .submitLabel(.search)
+                                .onSubmit { selectedTab = "검색" }
+                        }
+                        .padding(.horizontal, 16)
+                        .frame(height: 48)
+                        .background(Color.mossSurface, in: Capsule())
+                        .shadow(color: Color.mossTextPrimary.opacity(0.15), radius: 12, y: 5)
+
+                        Button { selectedTab = "검색" } label: {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 48, height: 48)
+                                .background(Color.mossPrimaryGreen, in: Circle())
+                                .shadow(color: Color.mossTextPrimary.opacity(0.15), radius: 12, y: 5)
+                        }
+                        .accessibilityLabel("검색 및 필터")
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 6)
+                    Spacer()
+                }
+
+                VStack(spacing: 0) {
+                    Text("에이밍 스터디카페   ₩2,500/h")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(Color.mossPrimaryGreen, in: RoundedRectangle(cornerRadius: 12))
+                    Image(systemName: "triangle.fill")
+                        .font(.system(size: 11))
+                        .rotationEffect(.degrees(180))
+                        .foregroundStyle(Color.mossPrimaryGreen)
+                }
+                .position(x: geometry.size.width * 0.52, y: geometry.size.height * 0.38)
+
+                Image(systemName: "location.circle.fill")
+                    .font(.system(size: 38))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, Color.mossPrimaryGreen)
+                    .position(x: geometry.size.width * 0.45, y: geometry.size.height * 0.62)
+
+                Button {} label: {
+                    Image(systemName: "location.north.circle.fill")
+                        .font(.system(size: 42))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.mossPrimaryGreen, .white)
+                }
+                .position(x: geometry.size.width - 42, y: geometry.size.height - 42)
+                .accessibilityLabel("현재 위치로 이동")
+            }
+        }
+        .frame(height: 412)
+    }
+
+    private var nearbySection: some View {
+        VStack(spacing: 12) {
+            Capsule().fill(Color.mossLine).frame(width: 36, height: 4).padding(.top, 10)
+            HStack {
+                Text("내 주변 명소 (27개)")
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundStyle(Color.mossTextPrimary)
+                Spacer()
+                Button {} label: {
+                    HStack(spacing: 4) {
+                        Text("거리순")
+                        Image(systemName: "chevron.down")
+                    }
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(Color.mossPrimaryGreen)
+                }
+            }
+            Label("금호중앙중학교 앞에서 찾는 중", systemImage: "location.north.fill")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Color.mossPrimaryGreen)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 10))
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 10) {
+                    ForEach(places) { place in PlaceCard(place: place) }
+                    if session.isGuest {
+                        guestPrompt
+                    } else {
+                        Button {
+                            Task { await session.logout() }
+                        } label: {
+                            Text("로그아웃")
+                                .font(.system(size: 14, weight: .bold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 48)
+                                .foregroundStyle(Color.mossPrimaryGreen)
+                                .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 12))
+                        }
+                    }
+                }
+                .padding(.bottom, 12)
+            }
+        }
+        .padding(.horizontal, 20)
+        .background(Color.mossSurface)
+        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28))
+        .shadow(color: Color.mossTextPrimary.opacity(0.08), radius: 10, y: -4)
+    }
+
+    private var guestPrompt: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: "heart")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(Color.mossPrimaryGreen)
+                    .frame(width: 42, height: 42)
+                    .background(Color.mossSageTint, in: Circle())
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("마음에 드는 장소를 찜해보세요")
+                        .font(.system(size: 13, weight: .heavy))
+                        .foregroundStyle(Color.mossTextPrimary)
+                    Text("로그인하면 기기 간에도 목록이 저장돼요.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.mossTextMuted)
+                }
+                Spacer(minLength: 0)
+            }
+            Button {
+                Task { await session.logout() }
+            } label: {
+                Text("로그인하고 찜·리뷰 이용")
+                    .font(.system(size: 14, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.mossPrimaryGreen, in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .padding(15)
+        .background(Color.mossSurface, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var bottomNavigation: some View {
+        HStack {
+            tabItem("홈", icon: "house")
+            tabItem("검색", icon: "magnifyingglass")
+            tabItem("찜", icon: "heart")
+            tabItem("마이", icon: "person")
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 4)
+        .background(Color.mossSurface)
+    }
+
+    private func tabItem(_ title: String, icon: String) -> some View {
+        Button { selectedTab = title } label: {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 23, weight: selectedTab == title ? .semibold : .regular))
+                Text(title)
+                    .font(.system(size: 11, weight: selectedTab == title ? .bold : .medium))
+            }
+            .foregroundStyle(selectedTab == title ? Color.mossPrimaryGreen : Color.mossTextMuted)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct Place: Identifiable {
+    let id: String
+    let name: String
+    let distance: String
+    let price: String
+    let details: String
+    let imageName: String
+
+    static let preview = [
+        Place(id: "aiming", name: "에이밍 스터디카페", distance: "150m", price: "시간당 ₩2,500", details: "와이파이 · 콘센트 · 대형 테이블", imageName: "PlaceAiming"),
+        Place(id: "study", name: "공부인스터디카페", distance: "340m", price: "시간당 ₩2,500", details: "개인 독서실 · 주차 가능 · 사물함", imageName: "PlaceStudy"),
+        Place(id: "start", name: "시작스터디카페", distance: "480m", price: "시간당 ₩2,000", details: "개인 독서실 · 주차 가능 · 사물함", imageName: "PlaceStudy")
+    ]
+}
+
+private struct PlaceCard: View {
+    let place: Place
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(place.imageName)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 72, height: 72)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Text(place.name)
+                        .font(.system(size: 14, weight: .heavy))
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(place.distance)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.mossPrimaryGreen)
+                }
+                HStack(spacing: 6) {
+                    Text("매우 조용")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.mossPrimaryGreen)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.mossSageTint, in: RoundedRectangle(cornerRadius: 6))
+                    Text(place.price)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.mossBrandSage)
+                }
+                Text(place.details)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.mossTextMuted)
+                    .lineLimit(1)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.mossBackground, in: RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+#Preview {
+    HomeView().environmentObject(SessionManager())
 }
