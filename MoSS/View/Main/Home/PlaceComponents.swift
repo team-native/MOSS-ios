@@ -8,12 +8,22 @@ struct Place: Identifiable {
     let details: String
     let imageName: String
     let noiseLevel: String
+    let address: String
+    let rating: String
+
+    var distanceInMeters: Int {
+        Int(distance.filter(\.isNumber)) ?? .max
+    }
+
+    var hourlyPrice: Int {
+        Int(price.filter(\.isNumber)) ?? .max
+    }
 
     static let preview = [
-        Place(id: "aiming", name: "에이밍 스터디카페", distance: "150m", price: "시간당 ₩2,500", details: "와이파이 · 콘센트 · 대형 테이블", imageName: "PlaceAiming", noiseLevel: "매우 조용"),
-        Place(id: "study", name: "공부인스터디카페", distance: "340m", price: "시간당 ₩2,500", details: "개인 독서실 · 주차 가능 · 사물함", imageName: "PlaceStudy", noiseLevel: "매우 조용"),
-        Place(id: "start", name: "시작스터디카페", distance: "480m", price: "시간당 ₩2,000", details: "노트북 가능 · 통화룸 · 프린터", imageName: "PlaceStudy", noiseLevel: "조용함"),
-        Place(id: "unam", name: "운암 집중라운지", distance: "610m", price: "시간당 ₩3,000", details: "24시간 · 와이파이 · 음료 제공", imageName: "PlaceAiming", noiseLevel: "보통")
+        Place(id: "aiming", name: "에이밍 스터디카페", distance: "150m", price: "시간당 ₩2,500", details: "와이파이 · 콘센트 · 대형 테이블", imageName: "PlaceAiming", noiseLevel: "매우 조용", address: "광주 북구 비엔날레로 87", rating: "4.8"),
+        Place(id: "study", name: "공부인스터디카페", distance: "340m", price: "시간당 ₩2,500", details: "개인 독서실 · 주차 가능 · 사물함", imageName: "PlaceStudy", noiseLevel: "매우 조용", address: "광주 북구 설죽로 202", rating: "4.8"),
+        Place(id: "start", name: "시작스터디카페", distance: "480m", price: "시간당 ₩2,000", details: "노트북 가능 · 통화룸 · 프린터", imageName: "PlaceStudy", noiseLevel: "조용함", address: "광주 북구 동림동 1150-1", rating: "4.8"),
+        Place(id: "unam", name: "운암 집중라운지", distance: "610m", price: "시간당 ₩3,000", details: "24시간 · 와이파이 · 음료 제공", imageName: "PlaceAiming", noiseLevel: "보통", address: "광주 북구 운암동", rating: "4.7")
     ]
 }
 
