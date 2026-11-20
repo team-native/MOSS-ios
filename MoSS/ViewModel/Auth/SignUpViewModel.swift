@@ -57,14 +57,10 @@ final class SignUpViewModel: ObservableObject {
     @Published private(set) var isCompleted = false
 
     private let authService: AuthServiceProtocol
-    private var timerTask: Task<Void, Never>?
+    private let timer = CountdownTimer()
 
     init(authService: AuthServiceProtocol = AuthService()) {
         self.authService = authService
-    }
-
-    deinit {
-        timerTask?.cancel()
     }
 
     // MARK: - 화면 표시용
@@ -261,21 +257,12 @@ final class SignUpViewModel: ObservableObject {
     }
 
     private func startTimer() {
-        stopTimer()
-        remainingSeconds = Policy.codeValidSeconds
-
-        timerTask = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                guard let self, !Task.isCancelled else { return }
-                self.remainingSeconds = max(0, self.remainingSeconds - 1)
-                if self.remainingSeconds == 0 { return }
-            }
+        timer.start(seconds: Policy.codeValidSeconds) { [weak self] remaining in
+            self?.remainingSeconds = remaining
         }
     }
 
     private func stopTimer() {
-        timerTask?.cancel()
-        timerTask = nil
+        timer.stop()
     }
 }

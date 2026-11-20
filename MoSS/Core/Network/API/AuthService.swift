@@ -6,7 +6,11 @@ protocol AuthServiceProtocol {
     func signUpStudent(_ request: StudentSignUpRequest) async throws
     func signUpBusiness(_ request: BusinessSignUpRequest) async throws
     func sendEmailCode(to email: String) async throws
-    func verifyEmailCode(email: String, code: String) async throws
+    /// 인증 성공 시 비밀번호 재설정 토큰을 반환한다. (회원가입에서는 사용하지 않음)
+    @discardableResult
+    func verifyEmailCode(email: String, code: String) async throws -> String?
+    func findID(name: String, number: String) async throws -> FindIDResponse
+    func resetPassword(_ request: ResetPasswordRequest) async throws
 }
 
 final class AuthService: AuthServiceProtocol {
@@ -49,11 +53,27 @@ final class AuthService: AuthServiceProtocol {
         _ = try await network.request(AuthAPI.sendEmail(SendEmailRequest(email: email)), as: EmptyData.self)
     }
 
-    func verifyEmailCode(email: String, code: String) async throws {
-        // 회원가입에서는 인증 성공 여부만 필요하므로 resetToken은 사용하지 않음
-        _ = try await network.request(
+    @discardableResult
+    func verifyEmailCode(email: String, code: String) async throws -> String? {
+        let response = try await network.request(
             AuthAPI.verifyEmail(VerifyEmailRequest(email: email, code: code)),
-            as: EmptyData.self
+            as: VerifyEmailResponse.self
         )
+        return response.data?.resetToken
+    }
+
+    func findID(name: String, number: String) async throws -> FindIDResponse {
+        let response = try await network.request(
+            AuthAPI.findID(FindIDRequest(name: name, number: number)),
+            as: FindIDResponse.self
+        )
+        guard let result = response.data else {
+            throw APIError.unknown
+        }
+        return result
+    }
+
+    func resetPassword(_ request: ResetPasswordRequest) async throws {
+        _ = try await network.request(AuthAPI.resetPassword(request), as: EmptyData.self)
     }
 }

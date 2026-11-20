@@ -3,6 +3,7 @@ import SwiftUI
 struct LoginView: View {
     @EnvironmentObject private var session: SessionManager
     @StateObject private var viewModel = LoginViewModel()
+    @StateObject private var router = AuthRouter()
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -11,7 +12,7 @@ struct LoginView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $router.path) {
             ScrollView {
                 VStack(spacing: 0) {
                     MoSSLogo()
@@ -31,12 +32,23 @@ struct LoginView: View {
             .navigationDestination(for: AuthRoute.self) { route in
                 switch route {
                 case .signUp:
-                    SignUpView { email in
-                        viewModel.email = email
-                        viewModel.password = ""
-                    }
-                case .findID: FindIDView()
+                    SignUpView()
+                case .findID:
+                    FindIDView()
+                case .findIDResult(let result):
+                    FindIDResultView(result: result)
+                case .findPassword(let email):
+                    FindPasswordView(email: email)
+                case .resetPassword(let resetToken):
+                    ResetPasswordView(resetToken: resetToken)
                 }
+            }
+            .onChange(of: router.prefilledEmail) {
+                // 회원가입·계정 찾기를 마치고 돌아오면 이메일을 채워 둔다
+                guard let email = router.prefilledEmail else { return }
+                viewModel.email = email
+                viewModel.password = ""
+                router.prefilledEmail = nil
             }
             .alert(
                 "로그인에 실패했습니다",
@@ -50,6 +62,7 @@ struct LoginView: View {
                 Text(viewModel.alertMessage ?? "")
             }
         }
+        .environmentObject(router)
     }
 
     private var form: some View {
@@ -115,11 +128,6 @@ struct LoginView: View {
             }
         }
     }
-}
-
-enum AuthRoute: Hashable {
-    case signUp
-    case findID
 }
 
 #Preview {
