@@ -15,6 +15,10 @@ struct HomeView: View {
                 SearchView(searchText: $searchText) {
                     selectedTab = "홈"
                 }
+            } else if selectedTab == "찜" {
+                FavoritesView {
+                    selectedTab = "홈"
+                }
             } else {
                 ComingSoonView(title: selectedTab)
             }
