@@ -19,6 +19,10 @@ struct HomeView: View {
                 FavoritesView {
                     selectedTab = "홈"
                 }
+            } else if selectedTab == "마이" {
+                MyPageView {
+                    selectedTab = "찜"
+                }
             } else {
                 ComingSoonView(title: selectedTab)
             }
