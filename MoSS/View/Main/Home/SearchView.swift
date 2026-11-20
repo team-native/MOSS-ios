@@ -193,12 +193,17 @@ struct SearchView: View {
 
     private var appliedFilters: some View {
         HStack(spacing: 7) {
-            filterChip(noiseLevel, isSelected: true)
-            filterChip(distance == "200m 내외" ? "200m 이내" : distance == "500m 내외" ? "500m 이내" : "1km 이상", isSelected: true)
-            filterChip("₩\(Int(maxPrice).formatted()) 이하", isSelected: false)
-            if !selectedAmenities.isEmpty { filterChip(selectedAmenities.sorted().first ?? "와이파이", isSelected: false) }
+            Button { isShowingFilters = true } label: { filterChip(noiseLevel, isSelected: true) }
+            Button { isShowingFilters = true } label: {
+                filterChip(distance == "200m 내외" ? "200m 이내" : distance == "500m 내외" ? "500m 이내" : "1km 이상", isSelected: true)
+            }
+            Button { isShowingFilters = true } label: { filterChip("₩\(Int(maxPrice).formatted()) 이하", isSelected: false) }
+            if !selectedAmenities.isEmpty {
+                Button { isShowingFilters = true } label: { filterChip(selectedAmenities.sorted().first ?? "와이파이", isSelected: false) }
+            }
         }
         .lineLimit(1)
+        .buttonStyle(.plain)
     }
 
     private var filterActions: some View {
@@ -269,11 +274,6 @@ struct SearchView: View {
             if allowsClear && !searchText.isEmpty {
                 Button { searchText = "" } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Color.mossTextMuted)
-                }
-                .accessibilityLabel("검색어 지우기")
-            } else if !allowsClear {
-                Button { searchText = "" } label: {
-                    Image(systemName: "xmark.circle").foregroundStyle(Color.mossBrandSage)
                 }
                 .accessibilityLabel("검색어 지우기")
             }

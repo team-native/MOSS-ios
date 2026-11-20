@@ -11,6 +11,10 @@ struct HomeView: View {
         Group {
             if selectedTab == "홈" {
                 homeContent
+            } else if selectedTab == "검색" {
+                SearchView(searchText: $searchText) {
+                    selectedTab = "홈"
+                }
             } else {
                 ComingSoonView(title: selectedTab)
             }
