@@ -35,15 +35,40 @@ struct MerchantWorkspaceView: View {
     @State private var isShowingVerificationPending = false
     @State private var submittedVerification: MerchantBusinessVerificationSubmission?
     @State private var isShowingEventManagement = false
+    @State private var isShowingEventCreate = false
     @State private var merchantEvents = MerchantEventRecord.sample
     @State private var merchantEventWeeklyCount = 1
+    @State private var merchantEventFilter: MerchantEventFilter = .ongoing
 
     var body: some View {
         Group {
-            if isShowingEventManagement {
-                MerchantEventManagementView(events: $merchantEvents, weeklyEventCount: $merchantEventWeeklyCount) {
-                    withAnimation(.snappy(duration: 0.25)) { isShowingEventManagement = false }
-                }
+            if isShowingEventCreate {
+                MerchantEventCreateView(
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) { isShowingEventCreate = false }
+                    },
+                    onSubmit: { event in
+                        withAnimation(.snappy(duration: 0.3)) {
+                            merchantEvents.insert(event, at: 0)
+                            merchantEventWeeklyCount += 1
+                            merchantEventFilter = .pending
+                            isShowingEventCreate = false
+                        }
+                    }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if isShowingEventManagement {
+                MerchantEventManagementView(
+                    events: $merchantEvents,
+                    weeklyEventCount: $merchantEventWeeklyCount,
+                    selectedFilter: $merchantEventFilter,
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) { isShowingEventManagement = false }
+                    },
+                    onCreate: {
+                        withAnimation(.snappy(duration: 0.25)) { isShowingEventCreate = true }
+                    }
+                )
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             } else if isShowingBusinessVerification {
                 MerchantBusinessVerificationView(
@@ -237,6 +262,7 @@ struct MerchantWorkspaceView: View {
                     selectedReplyEdit = nil
                     selectedStoreDestination = nil
                     isShowingEventManagement = false
+                    isShowingEventCreate = false
                     isShowingReviewReport = false
                     isShowingReportStatus = false
                     submittedReport = nil

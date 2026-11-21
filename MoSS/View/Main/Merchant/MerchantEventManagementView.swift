@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum MerchantEventFilter: String, CaseIterable, Identifiable {
+enum MerchantEventFilter: String, CaseIterable, Identifiable {
     case ongoing = "진행 중"
     case pending = "승인 대기"
     case ended = "종료"
@@ -32,9 +32,10 @@ struct MerchantEventRecord: Identifiable, Equatable {
 struct MerchantEventManagementView: View {
     @Binding var events: [MerchantEventRecord]
     @Binding var weeklyEventCount: Int
+    @Binding var selectedFilter: MerchantEventFilter
     let onBack: () -> Void
+    let onCreate: () -> Void
 
-    @State private var selectedFilter: MerchantEventFilter = .ongoing
     @State private var editingEvent: MerchantEventRecord?
     @State private var isShowingEditor = false
     @State private var isShowingLimitAlert = false
@@ -272,8 +273,7 @@ struct MerchantEventManagementView: View {
 
     private func addEvent() {
         guard canCreate else { isShowingLimitAlert = true; return }
-        editingEvent = nil
-        isShowingEditor = true
+        onCreate()
     }
 
     private func saveEvent(_ event: MerchantEventRecord) {
