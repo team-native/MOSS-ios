@@ -6,6 +6,7 @@ struct MyPageView: View {
     let onShowMyReviews: () -> Void
 
     @State private var alertMessage: String?
+    @State private var isShowingAccountDeletionConfirmation = false
 
     private var reviewCount: String { session.isGuest ? "0" : "14" }
     private var reportCount: String { session.isGuest ? "0" : "5" }
@@ -34,6 +35,13 @@ struct MyPageView: View {
             .padding(.bottom, 24)
         }
         .background(Color.mossBackground.ignoresSafeArea())
+        .overlay {
+            if isShowingAccountDeletionConfirmation {
+                accountDeletionConfirmation
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.15), value: isShowingAccountDeletionConfirmation)
         .alert("안내", isPresented: Binding(
             get: { alertMessage != nil },
             set: { if !$0 { alertMessage = nil } }
@@ -109,6 +117,61 @@ struct MyPageView: View {
         }
     }
 
+    private var accountDeletionConfirmation: some View {
+        ZStack {
+            Color.mossTextPrimary.opacity(0.6)
+                .contentShape(Rectangle())
+                .onTapGesture { isShowingAccountDeletionConfirmation = false }
+
+            VStack(spacing: 18) {
+                Image("AccountDeletionIcon")
+                    .frame(width: 24, height: 24)
+                    .frame(width: 52, height: 52)
+                    .background(Color(hex: 0xFBECE9), in: Circle())
+
+                VStack(spacing: 8) {
+                    Text("정말 탈퇴하시겠어요?")
+                        .font(.system(size: 18, weight: .heavy))
+                        .foregroundStyle(Color.mossTextPrimary)
+                    Text("찜한 장소, 작성한 리뷰와 제보 내역이\n모두 삭제되며 30일 이후에는 복구할 수 없어요.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.mossBrandSage)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                }
+
+                HStack(spacing: 8) {
+                    Button {
+                        isShowingAccountDeletionConfirmation = false
+                    } label: {
+                        Text("취소")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Color.mossPrimaryGreen)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    Button {
+                        isShowingAccountDeletionConfirmation = false
+                        alertMessage = "계정 삭제는 서버 연동 후 처리됩니다. 계정과 데이터는 삭제되지 않았어요."
+                    } label: {
+                        Text("탈퇴하기")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Color.mossError, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+            }
+            .padding(24)
+            .frame(maxWidth: 330)
+            .background(Color.mossSurface, in: RoundedRectangle(cornerRadius: 20))
+            .shadow(color: Color.mossTextPrimary.opacity(0.15), radius: 16, y: 6)
+            .padding(.horizontal, 24)
+        }
+    }
+
     private var accountSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("계정 관리")
@@ -128,7 +191,7 @@ struct MyPageView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.mossBrandSage)
                 }
-                Button { alertMessage = "회원탈퇴는 서버 연동 작업에서 연결할 예정입니다." } label: {
+                Button { isShowingAccountDeletionConfirmation = true } label: {
                     Text("회원탈퇴 (계정 삭제)")
                         .font(.system(size: 14))
                         .foregroundStyle(Color.mossError)
