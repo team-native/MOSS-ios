@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct FavoritesView: View {
+    @Binding var savedPlaceIDs: Set<String>
+    @Binding var sortOrder: String
     let onExplore: () -> Void
-
-    @State private var savedPlaceIDs = Set(Place.preview.prefix(3).map(\.id))
-    @State private var sortOrder = "거리순"
+    let onSelectPlace: (Place) -> Void
 
     private var savedPlaces: [Place] {
         let places = Place.preview.filter { savedPlaceIDs.contains($0.id) }
@@ -66,11 +66,15 @@ struct FavoritesView: View {
 
                 LazyVStack(spacing: 12) {
                     ForEach(savedPlaces) { place in
-                        SavedPlaceCard(place: place) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                _ = savedPlaceIDs.remove(place.id)
+                        SavedPlaceCard(
+                            place: place,
+                            onSelect: { onSelectPlace(place) },
+                            onRemove: {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    _ = savedPlaceIDs.remove(place.id)
+                                }
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -115,59 +119,69 @@ struct FavoritesView: View {
 
 private struct SavedPlaceCard: View {
     let place: Place
+    let onSelect: () -> Void
     let onRemove: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(place.imageName)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 88, height: 88)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+        HStack(alignment: .top, spacing: 8) {
+            Button(action: onSelect) {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(place.imageName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 88, height: 88)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
 
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 4) {
-                    Text(place.name)
-                        .font(.system(size: 14, weight: .heavy))
-                        .foregroundStyle(Color.mossTextPrimary)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(place.name)
+                            .font(.system(size: 14, weight: .heavy))
+                            .foregroundStyle(Color.mossTextPrimary)
+                            .lineLimit(1)
+
+                        Text(place.address)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.mossBrandSage)
+                            .lineLimit(1)
+
+                        HStack(spacing: 7) {
+                            Text(place.noiseLevel)
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color.mossPrimaryGreen)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.mossSageTint, in: RoundedRectangle(cornerRadius: 6))
+                            Text(place.distance)
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color.mossPrimaryGreen)
+                            Label(place.rating, systemImage: "star.fill")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color.mossWarning)
+                        }
                         .lineLimit(1)
-                    Spacer(minLength: 0)
-                    Button(action: onRemove) {
-                        Image(systemName: "heart")
-                            .font(.system(size: 19, weight: .medium))
-                            .foregroundStyle(Color.mossWarning)
+                        .minimumScaleFactor(0.8)
+
+                        Text(place.details)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.mossTextMuted)
+                            .lineLimit(1)
                     }
-                    .accessibilityLabel("찜 해제: \(place.name)")
+                    .padding(.vertical, 1)
                 }
-
-                Text(place.address)
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.mossBrandSage)
-                    .lineLimit(1)
-
-                HStack(spacing: 7) {
-                    Text(place.noiseLevel)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.mossPrimaryGreen)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.mossSageTint, in: RoundedRectangle(cornerRadius: 6))
-                    Text(place.distance)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.mossPrimaryGreen)
-                    Label(place.rating, systemImage: "star.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.mossWarning)
-                }
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
-                Text(place.details)
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.mossTextMuted)
-                    .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .padding(.vertical, 1)
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(place.name), \(place.address), \(place.noiseLevel), 상세 보기")
+
+            Button(action: onRemove) {
+                Image(systemName: "heart")
+                    .font(.system(size: 19, weight: .medium))
+                    .foregroundStyle(Color.mossWarning)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("찜 해제: \(place.name)")
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
