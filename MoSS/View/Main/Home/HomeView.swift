@@ -12,6 +12,7 @@ struct HomeView: View {
     @State private var isShowingReviewDeleteConfirmation = false
     @State private var isShowingReviewDeleteRecovery = false
     @State private var isShowingReviewReport = false
+    @State private var isShowingInfoErrorReport = false
     @State private var reviewDeletedAt = Date()
     @State private var isShowingLocationPermission = false
     @State private var isShowingReviewList = false
@@ -89,11 +90,17 @@ struct HomeView: View {
                         selectedTab = "검색"
                     }
                 )
+            } else if isShowingInfoErrorReport, let selectedPlace {
+                InfoErrorReportView(
+                    place: selectedPlace,
+                    onBack: { isShowingInfoErrorReport = false }
+                )
             } else if let selectedPlace {
                 PlaceDetailView(
                     place: selectedPlace,
                     onBack: { self.selectedPlace = nil },
-                    onShowReviews: { isShowingReviewList = true }
+                    onShowReviews: { isShowingReviewList = true },
+                    onReport: { isShowingInfoErrorReport = true }
                 )
             } else if selectedTab == "홈" {
                 if session.isGuest {
@@ -126,7 +133,7 @@ struct HomeView: View {
         }
         .background(Color.mossBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !isShowingReviewDeleteConfirmation && (!isShowingReviewList || selectedReview != nil) {
+            if !isShowingReviewDeleteConfirmation && !isShowingInfoErrorReport && (!isShowingReviewList || selectedReview != nil) {
                 bottomNavigation
             }
         }
@@ -331,6 +338,7 @@ struct HomeView: View {
             isShowingReviewDeleteConfirmation = false
             isShowingReviewDeleteRecovery = false
             isShowingReviewReport = false
+            isShowingInfoErrorReport = false
             selectedReview = nil
             isShowingReviewList = false
             isShowingLocationPermission = false
