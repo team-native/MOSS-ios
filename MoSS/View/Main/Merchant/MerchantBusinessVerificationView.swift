@@ -1,9 +1,25 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+struct MerchantBusinessVerificationSubmission: Identifiable, Equatable {
+    let id: UUID
+    let businessNumber: String
+    let ownerName: String
+    let documentName: String
+    let submittedAt: Date
+
+    init(businessNumber: String, ownerName: String, documentName: String, submittedAt: Date = Date()) {
+        self.id = UUID()
+        self.businessNumber = businessNumber
+        self.ownerName = ownerName
+        self.documentName = documentName
+        self.submittedAt = submittedAt
+    }
+}
+
 struct MerchantBusinessVerificationView: View {
     let onBack: () -> Void
-    let onSubmit: () -> Void
+    let onSubmit: (MerchantBusinessVerificationSubmission) -> Void
 
     @State private var businessNumber = "123-45-67890"
     @State private var ownerName = "치이카와"
@@ -272,7 +288,11 @@ struct MerchantBusinessVerificationView: View {
             errorPulse += 1
             return
         }
-        onSubmit()
+        onSubmit(MerchantBusinessVerificationSubmission(
+            businessNumber: businessNumber,
+            ownerName: ownerName.trimmingCharacters(in: .whitespacesAndNewlines),
+            documentName: documentName ?? ""
+        ))
     }
 
     private func formatBusinessNumber(_ digits: String) -> String {
