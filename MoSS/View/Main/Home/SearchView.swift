@@ -3,6 +3,7 @@ import SwiftUI
 struct SearchView: View {
     @Binding var searchText: String
     let onBack: () -> Void
+    let onPlaceSelected: (Place) -> Void
 
     @State private var isShowingFilters = false
     @State private var noiseLevel = "조용함"
@@ -86,7 +87,9 @@ struct SearchView: View {
                             .padding(.top, 48)
                     } else {
                         LazyVStack(spacing: 10) {
-                            ForEach(filteredPlaces) { place in PlaceCard(place: place) }
+                            ForEach(filteredPlaces) { place in
+                                PlaceCard(place: place) { onPlaceSelected(place) }
+                            }
                         }
                     }
 
