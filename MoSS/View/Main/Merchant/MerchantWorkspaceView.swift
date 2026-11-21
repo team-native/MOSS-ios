@@ -30,10 +30,23 @@ struct MerchantWorkspaceView: View {
     @State private var isShowingReviewReport = false
     @State private var submittedReport: MerchantReportSubmission?
     @State private var isShowingReportStatus = false
+    @State private var isShowingBusinessVerification = false
+    @State private var isShowingVerificationSubmissionNotice = false
 
     var body: some View {
         Group {
-            if isShowingReportStatus, let submittedReport {
+            if isShowingBusinessVerification {
+                MerchantBusinessVerificationView(
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) { isShowingBusinessVerification = false }
+                    },
+                    onSubmit: {
+                        withAnimation(.snappy(duration: 0.25)) { isShowingBusinessVerification = false }
+                        isShowingVerificationSubmissionNotice = true
+                    }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if isShowingReportStatus, let submittedReport {
                 MerchantReportStatusView(
                     submission: submittedReport,
                     onBack: {
@@ -144,6 +157,17 @@ struct MerchantWorkspaceView: View {
                 case .more:
                     VStack(spacing: 20) {
                         ComingSoonView(title: "사업자 더보기")
+                        Button {
+                            withAnimation(.snappy(duration: 0.25)) { isShowingBusinessVerification = true }
+                        } label: {
+                            Text("사업자 인증 신청")
+                                .font(.system(size: 14, weight: .heavy))
+                                .foregroundStyle(Color.mossPrimaryGreen)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 12)
+                                .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 12))
+                        }
+                        .buttonStyle(.plain)
                         Button(action: onExit) {
                             Text("일반 사용자 화면으로 돌아가기")
                                 .font(.system(size: 14, weight: .bold))
@@ -158,6 +182,11 @@ struct MerchantWorkspaceView: View {
             merchantTabBar
         }
         .background(Color.mossBackground.ignoresSafeArea())
+        .alert("인증 신청 접수 (미리보기)", isPresented: $isShowingVerificationSubmissionNotice) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text("인증 신청은 로컬 미리보기로만 처리했습니다. 사업자 정보 조회 및 파일 전송은 진행되지 않았습니다.")
+        }
     }
 
     private var merchantTabBar: some View {
@@ -165,6 +194,7 @@ struct MerchantWorkspaceView: View {
             ForEach(MerchantTab.allCases) { tab in
                 Button {
                     selectedTab = tab
+                    isShowingBusinessVerification = false
                     selectedReview = nil
                     selectedReplyEdit = nil
                     selectedStoreDestination = nil
