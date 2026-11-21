@@ -6,8 +6,10 @@ struct HomeView: View {
     @State private var searchText = ""
     @State private var selectedPlace: Place?
     @State private var selectedReview: PlaceReview?
+    @State private var submittedReviews: [PlaceReview] = []
     @State private var removedReviewIDs: Set<String> = []
     @State private var editedReviews: [String: PlaceReview] = [:]
+    @State private var isShowingReviewWrite = false
     @State private var isShowingReviewEdit = false
     @State private var isShowingReviewDeleteConfirmation = false
     @State private var isShowingReviewDeleteRecovery = false
@@ -21,7 +23,18 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            if isShowingReviewReport, let selectedReview {
+            if isShowingReviewWrite, let selectedPlace {
+                ReviewWriteView(
+                    place: selectedPlace,
+                    onClose: { isShowingReviewWrite = false },
+                    onSubmit: { review in
+                        submittedReviews.insert(review, at: 0)
+                        isShowingReviewWrite = false
+                        isShowingReviewList = true
+                        selectedReview = nil
+                    }
+                )
+            } else if isShowingReviewReport, let selectedReview {
                 ReviewReportView(
                     review: selectedReview,
                     onBack: { isShowingReviewReport = false }
@@ -73,13 +86,15 @@ struct HomeView: View {
             } else if isShowingReviewList, let selectedPlace {
                 ReviewListView(
                     place: selectedPlace,
+                    submittedReviews: $submittedReviews,
                     removedReviewIDs: $removedReviewIDs,
                     editedReviews: $editedReviews,
                     onBack: {
                         isShowingReviewList = false
                         selectedTab = "홈"
                     },
-                    onSelectReview: { selectedReview = $0 }
+                    onSelectReview: { selectedReview = $0 },
+                    onWriteReview: { isShowingReviewWrite = true }
                 )
             } else if isShowingLocationPermission {
                 LocationPermissionView(
@@ -100,6 +115,7 @@ struct HomeView: View {
                     place: selectedPlace,
                     onBack: { self.selectedPlace = nil },
                     onShowReviews: { isShowingReviewList = true },
+                    onWriteReview: { isShowingReviewWrite = true },
                     onReport: { isShowingInfoErrorReport = true }
                 )
             } else if selectedTab == "홈" {
@@ -133,7 +149,7 @@ struct HomeView: View {
         }
         .background(Color.mossBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !isShowingReviewDeleteConfirmation && !isShowingInfoErrorReport && (!isShowingReviewList || selectedReview != nil) {
+            if !isShowingReviewDeleteConfirmation && !isShowingInfoErrorReport && !isShowingReviewWrite && (!isShowingReviewList || selectedReview != nil) {
                 bottomNavigation
             }
         }
@@ -335,6 +351,7 @@ struct HomeView: View {
     private func tabItem(_ title: String, icon: String) -> some View {
         Button {
             isShowingReviewEdit = false
+            isShowingReviewWrite = false
             isShowingReviewDeleteConfirmation = false
             isShowingReviewDeleteRecovery = false
             isShowingReviewReport = false
