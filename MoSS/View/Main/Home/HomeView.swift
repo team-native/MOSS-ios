@@ -25,7 +25,16 @@ struct HomeView: View {
                     self.selectedPlace = nil
                 }
             } else if selectedTab == "홈" {
-                homeContent
+                if session.isGuest {
+                    GuestPreviewView(
+                        searchText: $searchText,
+                        onSearch: { selectedTab = "검색" },
+                        onSelectPlace: { selectedPlace = $0 },
+                        onLogin: { Task { await session.logout() } }
+                    )
+                } else {
+                    homeContent
+                }
             } else if selectedTab == "검색" {
                 SearchView(
                     searchText: $searchText,
