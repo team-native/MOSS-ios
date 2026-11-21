@@ -22,7 +22,7 @@ struct HomeView: View {
     @State private var isShowingMyReviewList = false
     @State private var isReturningToMyReviewList = false
     @State private var isShowingReportHistory = false
-    @State private var isShowingReportDetailPlaceholder = false
+    @State private var selectedReport: ReportRecord?
 
     private let places = Place.preview
 
@@ -128,15 +128,18 @@ struct HomeView: View {
                     place: selectedPlace,
                     onBack: { isShowingInfoErrorReport = false }
                 )
-            } else if isShowingReportDetailPlaceholder {
-                ComingSoonView(title: "제보 상세")
+            } else if let selectedReport {
+                ReportDetailView(
+                    report: selectedReport,
+                    onBack: {
+                        self.selectedReport = nil
+                        isShowingReportHistory = true
+                    }
+                )
             } else if isShowingReportHistory {
                 ReportHistoryView(
                     onBack: { isShowingReportHistory = false },
-                    onSelectReport: { _ in
-                        isShowingReportHistory = false
-                        isShowingReportDetailPlaceholder = true
-                    }
+                    onSelectReport: { selectedReport = $0 }
                 )
             } else if isShowingMyReviewList {
                 MyReviewListView(
