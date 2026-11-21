@@ -7,6 +7,8 @@ struct HomeView: View {
     @State private var selectedPlace: Place?
     @State private var selectedReview: PlaceReview?
     @State private var removedReviewIDs: Set<String> = []
+    @State private var editedReviews: [String: PlaceReview] = [:]
+    @State private var isShowingReviewEdit = false
     @State private var isShowingReviewDeleteConfirmation = false
     @State private var isShowingLocationPermission = false
     @State private var isShowingReviewList = false
@@ -15,12 +17,27 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            if let selectedReview, let selectedPlace {
+            if isShowingReviewEdit, let selectedReview, let selectedPlace {
+                ReviewEditView(
+                    place: selectedPlace,
+                    review: selectedReview,
+                    onBack: { isShowingReviewEdit = false },
+                    onSave: { updatedReview in
+                        editedReviews[updatedReview.id] = updatedReview
+                        self.selectedReview = updatedReview
+                        isShowingReviewEdit = false
+                    }
+                )
+            } else if let selectedReview, let selectedPlace {
                 ReviewDetailView(
                     place: selectedPlace,
                     review: selectedReview,
                     isShowingDeleteConfirmation: $isShowingReviewDeleteConfirmation,
                     onBack: { self.selectedReview = nil },
+                    onEdit: {
+                        selectedTab = "마이"
+                        isShowingReviewEdit = true
+                    },
                     onDelete: {
                         removedReviewIDs.insert(selectedReview.id)
                         isShowingReviewDeleteConfirmation = false
@@ -31,7 +48,11 @@ struct HomeView: View {
                 ReviewListView(
                     place: selectedPlace,
                     removedReviewIDs: $removedReviewIDs,
-                    onBack: { isShowingReviewList = false },
+                    editedReviews: $editedReviews,
+                    onBack: {
+                        isShowingReviewList = false
+                        selectedTab = "홈"
+                    },
                     onSelectReview: { selectedReview = $0 }
                 )
             } else if isShowingLocationPermission {
@@ -281,6 +302,7 @@ struct HomeView: View {
 
     private func tabItem(_ title: String, icon: String) -> some View {
         Button {
+            isShowingReviewEdit = false
             isShowingReviewDeleteConfirmation = false
             selectedReview = nil
             isShowingReviewList = false

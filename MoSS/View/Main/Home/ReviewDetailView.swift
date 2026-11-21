@@ -5,6 +5,7 @@ struct ReviewDetailView: View {
     let review: PlaceReview
     @Binding var isShowingDeleteConfirmation: Bool
     let onBack: () -> Void
+    let onEdit: () -> Void
     let onDelete: () -> Void
 
     @State private var isHelpful = false
@@ -163,9 +164,7 @@ struct ReviewDetailView: View {
 
     private var ownerActions: some View {
         HStack(spacing: 10) {
-            Button {
-                alertMessage = "리뷰 수정 화면은 다음 퍼블리싱 단계에서 연결할게요."
-            } label: {
+            Button(action: onEdit) {
                 Text("수정하기")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(Color.mossPrimaryGreen)
