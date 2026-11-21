@@ -7,6 +7,7 @@ struct MyPageView: View {
     let onShowReportHistory: () -> Void
     let onAccountDeletionComplete: () -> Void
     let onShowProfileEdit: () -> Void
+    let onShowMerchantPreview: () -> Void
 
     @State private var alertMessage: String?
     @State private var isShowingAccountDeletionConfirmation = false
@@ -260,6 +261,11 @@ struct MyPageView: View {
                     Text("회원탈퇴 (계정 삭제)")
                         .font(.system(size: 14))
                         .foregroundStyle(Color.mossError)
+                }
+                Button(action: onShowMerchantPreview) {
+                    Text("사업자 홈 미리보기 · 샘플 화면")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color.mossPrimaryGreen)
                 }
             }
             .buttonStyle(.plain)
