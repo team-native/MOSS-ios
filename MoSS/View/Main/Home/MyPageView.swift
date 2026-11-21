@@ -7,6 +7,7 @@ struct MyPageView: View {
 
     @State private var alertMessage: String?
     @State private var isShowingAccountDeletionConfirmation = false
+    @State private var isShowingLogoutConfirmation = false
 
     private var reviewCount: String { session.isGuest ? "0" : "14" }
     private var reportCount: String { session.isGuest ? "0" : "5" }
@@ -39,9 +40,13 @@ struct MyPageView: View {
             if isShowingAccountDeletionConfirmation {
                 accountDeletionConfirmation
                     .transition(.opacity)
+            } else if isShowingLogoutConfirmation {
+                logoutConfirmation
+                    .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.15), value: isShowingAccountDeletionConfirmation)
+        .animation(.easeInOut(duration: 0.15), value: isShowingLogoutConfirmation)
         .alert("안내", isPresented: Binding(
             get: { alertMessage != nil },
             set: { if !$0 { alertMessage = nil } }
@@ -117,6 +122,61 @@ struct MyPageView: View {
         }
     }
 
+    private var logoutConfirmation: some View {
+        ZStack {
+            Color.mossTextPrimary.opacity(0.6)
+                .contentShape(Rectangle())
+                .onTapGesture { isShowingLogoutConfirmation = false }
+
+            VStack(spacing: 18) {
+                Image("LogoutConfirmationIcon")
+                    .frame(width: 24, height: 24)
+                    .frame(width: 52, height: 52)
+                    .background(Color.mossSageSoft, in: Circle())
+
+                VStack(spacing: 8) {
+                    Text("로그아웃할까요?")
+                        .font(.system(size: 18, weight: .heavy))
+                        .foregroundStyle(Color.mossTextPrimary)
+                    Text("이 기기에서 로그아웃됩니다.\n저장한 찜과 리뷰는 계정에 그대로 보관돼요.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.mossBrandSage)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                }
+
+                HStack(spacing: 8) {
+                    Button {
+                        isShowingLogoutConfirmation = false
+                    } label: {
+                        Text("취소")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Color.mossPrimaryGreen)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    Button {
+                        isShowingLogoutConfirmation = false
+                        session.logoutLocally()
+                    } label: {
+                        Text("로그아웃")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Color.mossDarkAction, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+            }
+            .padding(24)
+            .frame(maxWidth: 330)
+            .background(Color.mossSurface, in: RoundedRectangle(cornerRadius: 20))
+            .shadow(color: Color.mossTextPrimary.opacity(0.15), radius: 16, y: 6)
+            .padding(.horizontal, 24)
+        }
+    }
+
     private var accountDeletionConfirmation: some View {
         ZStack {
             Color.mossTextPrimary.opacity(0.6)
@@ -180,7 +240,11 @@ struct MyPageView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 Button {
-                    Task { await session.logout() }
+                    if session.isGuest {
+                        alertMessage = "로그인 화면은 앱 인증 흐름에서 열 수 있습니다."
+                    } else {
+                        isShowingLogoutConfirmation = true
+                    }
                 } label: {
                     Text(session.isGuest ? "로그인하기" : "로그아웃")
                         .font(.system(size: 14, weight: .semibold))

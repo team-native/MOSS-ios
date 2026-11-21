@@ -43,6 +43,12 @@ final class SessionManager: ObservableObject {
         state = .guest
     }
 
+    /// 서버 요청 없이 현재 기기의 세션과 자동 로그인 토큰만 지운다.
+    func logoutLocally() {
+        tokenStorage.clear()
+        state = .loggedOut
+    }
+
     func logout() async {
         if case .loggedIn = state {
             await authService.logout()
