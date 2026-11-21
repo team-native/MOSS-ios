@@ -15,6 +15,7 @@ struct ReportRecord: Identifiable {
     let submittedAt: String
     let status: String
     var isLocalPreview = false
+    var localReceiptNumber: String? = nil
 
     static let preview: [ReportRecord] = [
         ReportRecord(

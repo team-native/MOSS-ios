@@ -155,7 +155,15 @@ struct HomeView: View {
                 InfoErrorReportView(
                     place: selectedPlace,
                     onBack: { isShowingInfoErrorReport = false },
-                    onSubmit: { report in
+                    onSubmit: { submittedReport in
+                        var report = submittedReport
+                        let dateCode = String(report.submittedAt.prefix(10))
+                            .replacingOccurrences(of: ".", with: "")
+                            .suffix(6)
+                        let nextSequence = reportHistory.filter { $0.isLocalPreview }.count + 1
+                        let sequenceText = String(nextSequence)
+                        let sequence = String(repeating: "0", count: max(0, 3 - sequenceText.count)) + sequenceText
+                        report.localReceiptNumber = "LOCAL-\(dateCode)-\(sequence)"
                         withAnimation(.snappy(duration: 0.3)) {
                             reportHistory.insert(report, at: 0)
                             submittedInfoErrorReport = report

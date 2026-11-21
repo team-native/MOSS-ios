@@ -148,7 +148,11 @@ struct InfoErrorReportResultView: View {
 extension ReportRecord {
     var displayNumber: String {
         if id == "report-price" { return "I-2601048" }
-        if id.hasPrefix("report-local-") { return "LOCAL-\(id.suffix(6).uppercased())" }
+        if let localReceiptNumber { return localReceiptNumber }
+        if id.hasPrefix("report-local-") {
+            let identifier = id.dropFirst("report-local-".count).replacingOccurrences(of: "-", with: "")
+            return "LOCAL-\(identifier.uppercased())"
+        }
         return "R-\(id.replacingOccurrences(of: "report-", with: "").uppercased())"
     }
 }
