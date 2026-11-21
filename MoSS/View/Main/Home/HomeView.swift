@@ -25,6 +25,7 @@ struct HomeView: View {
     @State private var selectedReport: ReportRecord?
     @State private var isShowingAccountDeletionComplete = false
     @State private var isShowingProfileEdit = false
+    @State private var isShowingMerchantPreview = false
 
     private let places = Place.preview
 
@@ -41,6 +42,8 @@ struct HomeView: View {
                 )
             } else if isShowingProfileEdit {
                 ProfileEditView(onBack: { isShowingProfileEdit = false })
+            } else if isShowingMerchantPreview {
+                MerchantWorkspaceView(onExit: { isShowingMerchantPreview = false })
             } else if isShowingReviewWrite, let selectedPlace {
                 ReviewWriteView(
                     place: selectedPlace,
@@ -198,7 +201,8 @@ struct HomeView: View {
                     onShowMyReviews: { isShowingMyReviewList = true },
                     onShowReportHistory: { isShowingReportHistory = true },
                     onAccountDeletionComplete: { isShowingAccountDeletionComplete = true },
-                    onShowProfileEdit: { isShowingProfileEdit = true }
+                    onShowProfileEdit: { isShowingProfileEdit = true },
+                    onShowMerchantPreview: { isShowingMerchantPreview = true }
                 )
             } else {
                 ComingSoonView(title: selectedTab)
@@ -206,7 +210,7 @@ struct HomeView: View {
         }
         .background(Color.mossBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !isShowingReviewDeleteConfirmation && !isShowingInfoErrorReport && !isShowingReviewWrite && (!isShowingReviewList || selectedReview != nil || !hasVisibleReviews) {
+            if !isShowingMerchantPreview && !isShowingReviewDeleteConfirmation && !isShowingInfoErrorReport && !isShowingReviewWrite && (!isShowingReviewList || selectedReview != nil || !hasVisibleReviews) {
                 bottomNavigation
             }
         }
