@@ -11,6 +11,7 @@ struct HomeView: View {
     @State private var isShowingReviewEdit = false
     @State private var isShowingReviewDeleteConfirmation = false
     @State private var isShowingReviewDeleteRecovery = false
+    @State private var isShowingReviewReport = false
     @State private var reviewDeletedAt = Date()
     @State private var isShowingLocationPermission = false
     @State private var isShowingReviewList = false
@@ -19,7 +20,12 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            if isShowingReviewDeleteRecovery, let selectedReview {
+            if isShowingReviewReport, let selectedReview {
+                ReviewReportView(
+                    review: selectedReview,
+                    onBack: { isShowingReviewReport = false }
+                )
+            } else if isShowingReviewDeleteRecovery, let selectedReview {
                 ReviewDeleteRecoveryView(
                     deletedAt: reviewDeletedAt,
                     onRestore: {
@@ -55,6 +61,7 @@ struct HomeView: View {
                         selectedTab = "마이"
                         isShowingReviewEdit = true
                     },
+                    onReport: { isShowingReviewReport = true },
                     onDelete: {
                         removedReviewIDs.insert(selectedReview.id)
                         isShowingReviewDeleteConfirmation = false
@@ -323,6 +330,7 @@ struct HomeView: View {
             isShowingReviewEdit = false
             isShowingReviewDeleteConfirmation = false
             isShowingReviewDeleteRecovery = false
+            isShowingReviewReport = false
             selectedReview = nil
             isShowingReviewList = false
             isShowingLocationPermission = false
