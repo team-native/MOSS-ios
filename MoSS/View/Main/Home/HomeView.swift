@@ -7,6 +7,7 @@ struct HomeView: View {
     @State private var selectedPlace: Place?
     @State private var selectedReview: PlaceReview?
     @State private var submittedReviews: [PlaceReview] = []
+    @State private var reviewPlaces: [String: Place] = [:]
     @State private var removedReviewIDs: Set<String> = []
     @State private var editedReviews: [String: PlaceReview] = [:]
     @State private var isShowingReviewWrite = false
@@ -18,11 +19,14 @@ struct HomeView: View {
     @State private var reviewDeletedAt = Date()
     @State private var isShowingLocationPermission = false
     @State private var isShowingReviewList = false
+    @State private var isShowingMyReviewList = false
+    @State private var isReturningToMyReviewList = false
 
     private let places = Place.preview
 
     private var hasVisibleReviews: Bool {
-        (submittedReviews + PlaceReview.preview).contains { !removedReviewIDs.contains($0.id) }
+        let placeReviews = submittedReviews.filter { reviewPlaces[$0.id]?.id == selectedPlace?.id }
+        return (placeReviews + PlaceReview.preview).contains { !removedReviewIDs.contains($0.id) }
     }
 
     var body: some View {
@@ -33,6 +37,7 @@ struct HomeView: View {
                     onClose: { isShowingReviewWrite = false },
                     onSubmit: { review in
                         submittedReviews.insert(review, at: 0)
+                        reviewPlaces[review.id] = selectedPlace
                         isShowingReviewWrite = false
                         isShowingReviewList = true
                         selectedReview = nil
@@ -74,7 +79,13 @@ struct HomeView: View {
                     place: selectedPlace,
                     review: selectedReview,
                     isShowingDeleteConfirmation: $isShowingReviewDeleteConfirmation,
-                    onBack: { self.selectedReview = nil },
+                    onBack: {
+                        self.selectedReview = nil
+                        if isReturningToMyReviewList {
+                            isReturningToMyReviewList = false
+                            isShowingMyReviewList = true
+                        }
+                    },
                     onEdit: {
                         selectedTab = "마이"
                         isShowingReviewEdit = true
@@ -91,6 +102,7 @@ struct HomeView: View {
                 ReviewListView(
                     place: selectedPlace,
                     submittedReviews: $submittedReviews,
+                    reviewPlaces: $reviewPlaces,
                     removedReviewIDs: $removedReviewIDs,
                     editedReviews: $editedReviews,
                     onBack: {
@@ -113,6 +125,20 @@ struct HomeView: View {
                 InfoErrorReportView(
                     place: selectedPlace,
                     onBack: { isShowingInfoErrorReport = false }
+                )
+            } else if isShowingMyReviewList {
+                MyReviewListView(
+                    submittedReviews: $submittedReviews,
+                    reviewPlaces: $reviewPlaces,
+                    editedReviews: $editedReviews,
+                    onBack: { isShowingMyReviewList = false },
+                    onSelectReview: { place, review in
+                        isShowingMyReviewList = false
+                        isReturningToMyReviewList = true
+                        selectedPlace = place
+                        selectedReview = review
+                        selectedTab = "마이"
+                    }
                 )
             } else if let selectedPlace {
                 PlaceDetailView(
@@ -144,9 +170,10 @@ struct HomeView: View {
                     selectedTab = "홈"
                 }
             } else if selectedTab == "마이" {
-                MyPageView {
-                    selectedTab = "찜"
-                }
+                MyPageView(
+                    onShowFavorites: { selectedTab = "찜" },
+                    onShowMyReviews: { isShowingMyReviewList = true }
+                )
             } else {
                 ComingSoonView(title: selectedTab)
             }
@@ -362,6 +389,8 @@ struct HomeView: View {
             isShowingInfoErrorReport = false
             selectedReview = nil
             isShowingReviewList = false
+            isShowingMyReviewList = false
+            isReturningToMyReviewList = false
             isShowingLocationPermission = false
             selectedPlace = nil
             selectedTab = title
