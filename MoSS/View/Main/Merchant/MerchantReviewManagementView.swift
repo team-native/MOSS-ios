@@ -69,7 +69,8 @@ struct MerchantReviewManagementView: View {
     }
 
     private func effectiveReply(for review: MerchantReviewRecord) -> String? {
-        replyDrafts[review.id] ?? review.reply
+        guard let savedReply = replyDrafts[review.id] else { return review.reply }
+        return savedReply.isEmpty ? nil : savedReply
     }
 
     var body: some View {

@@ -22,6 +22,7 @@ struct MerchantWorkspaceView: View {
     let onExit: () -> Void
     @State private var selectedTab: MerchantTab = .home
     @State private var selectedReview: MerchantReviewRecord?
+    @State private var selectedReplyEdit: MerchantReviewRecord?
     @State private var replyDrafts: [String: String] = [:]
     @State private var isShowingReviewReport = false
     @State private var submittedReport: MerchantReportSubmission?
@@ -61,10 +62,26 @@ struct MerchantWorkspaceView: View {
                     }
                 )
                 .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if let selectedReplyEdit {
+                MerchantReplyEditView(
+                    review: selectedReplyEdit,
+                    initialReply: replyDrafts[selectedReplyEdit.id] ?? selectedReplyEdit.reply ?? "",
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) { self.selectedReplyEdit = nil }
+                    },
+                    onSave: { replyDrafts[selectedReplyEdit.id] = $0 },
+                    onDelete: {
+                        withAnimation(.snappy(duration: 0.25)) {
+                            replyDrafts[selectedReplyEdit.id] = ""
+                            self.selectedReplyEdit = nil
+                        }
+                    }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             } else if let selectedReview {
                 MerchantReviewDetailView(
                     review: selectedReview,
-                    existingReply: replyDrafts[selectedReview.id] ?? selectedReview.reply,
+                    existingReply: selectedReview.reply,
                     onBack: {
                         withAnimation(.snappy(duration: 0.25)) { self.selectedReview = nil }
                     },
@@ -81,7 +98,13 @@ struct MerchantWorkspaceView: View {
                     MerchantHomeView(onSelectTab: { selectedTab = $0 })
                 case .reviews:
                     MerchantReviewManagementView(replyDrafts: replyDrafts, onSelectReview: { review in
-                        withAnimation(.snappy(duration: 0.25)) { selectedReview = review }
+                        withAnimation(.snappy(duration: 0.25)) {
+                            if review.reply == nil {
+                                selectedReview = review
+                            } else {
+                                selectedReplyEdit = review
+                            }
+                        }
                     })
                 case .store:
                     ComingSoonView(title: "매장 관리")
@@ -110,6 +133,7 @@ struct MerchantWorkspaceView: View {
                 Button {
                     selectedTab = tab
                     selectedReview = nil
+                    selectedReplyEdit = nil
                     isShowingReviewReport = false
                     isShowingReportStatus = false
                     submittedReport = nil
