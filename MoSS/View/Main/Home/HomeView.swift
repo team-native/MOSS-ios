@@ -10,6 +10,8 @@ struct HomeView: View {
     @State private var editedReviews: [String: PlaceReview] = [:]
     @State private var isShowingReviewEdit = false
     @State private var isShowingReviewDeleteConfirmation = false
+    @State private var isShowingReviewDeleteRecovery = false
+    @State private var reviewDeletedAt = Date()
     @State private var isShowingLocationPermission = false
     @State private var isShowingReviewList = false
 
@@ -17,7 +19,22 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            if isShowingReviewEdit, let selectedReview, let selectedPlace {
+            if isShowingReviewDeleteRecovery, let selectedReview {
+                ReviewDeleteRecoveryView(
+                    deletedAt: reviewDeletedAt,
+                    onRestore: {
+                        removedReviewIDs.remove(selectedReview.id)
+                        isShowingReviewDeleteRecovery = false
+                        self.selectedReview = nil
+                        isShowingReviewList = true
+                    },
+                    onReviewList: {
+                        isShowingReviewDeleteRecovery = false
+                        self.selectedReview = nil
+                        isShowingReviewList = true
+                    }
+                )
+            } else if isShowingReviewEdit, let selectedReview, let selectedPlace {
                 ReviewEditView(
                     place: selectedPlace,
                     review: selectedReview,
@@ -41,7 +58,8 @@ struct HomeView: View {
                     onDelete: {
                         removedReviewIDs.insert(selectedReview.id)
                         isShowingReviewDeleteConfirmation = false
-                        self.selectedReview = nil
+                        reviewDeletedAt = Date()
+                        isShowingReviewDeleteRecovery = true
                     }
                 )
             } else if isShowingReviewList, let selectedPlace {
@@ -304,6 +322,7 @@ struct HomeView: View {
         Button {
             isShowingReviewEdit = false
             isShowingReviewDeleteConfirmation = false
+            isShowingReviewDeleteRecovery = false
             selectedReview = nil
             isShowingReviewList = false
             isShowingLocationPermission = false
