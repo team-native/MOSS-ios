@@ -4,6 +4,7 @@ struct PlaceDetailView: View {
     let place: Place
     let onBack: () -> Void
     let onShowReviews: () -> Void
+    let onReport: () -> Void
 
     @State private var isFavorite = false
     @State private var alertMessage: String?
@@ -194,9 +195,7 @@ struct PlaceDetailView: View {
                     .padding(.horizontal, 10)
             }
             .accessibilityLabel(isFavorite ? "찜 해제" : "장소 찜하기")
-            Button {
-                alertMessage = "신고 사유를 선택하는 화면은 준비 중이에요."
-            } label: {
+            Button(action: onReport) {
                 Image(systemName: "flag")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(Color.mossTextMuted)
