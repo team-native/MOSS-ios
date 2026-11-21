@@ -5,6 +5,7 @@ struct MyPageView: View {
     let onShowFavorites: () -> Void
     let onShowMyReviews: () -> Void
     let onShowReportHistory: () -> Void
+    let onAccountDeletionComplete: () -> Void
 
     @State private var alertMessage: String?
     @State private var isShowingAccountDeletionConfirmation = false
@@ -212,7 +213,7 @@ struct MyPageView: View {
                     }
                     Button {
                         isShowingAccountDeletionConfirmation = false
-                        alertMessage = "계정 삭제는 서버 연동 후 처리됩니다. 계정과 데이터는 삭제되지 않았어요."
+                        onAccountDeletionComplete()
                     } label: {
                         Text("탈퇴하기")
                             .font(.system(size: 14, weight: .bold))
