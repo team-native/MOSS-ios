@@ -23,6 +23,7 @@ struct MerchantWorkspaceView: View {
     @State private var selectedTab: MerchantTab = .home
     @State private var selectedReview: MerchantReviewRecord?
     @State private var selectedReplyEdit: MerchantReviewRecord?
+    @State private var selectedStoreDestination: MerchantStoreDestination?
     @State private var replyDrafts: [String: String] = [:]
     @State private var isShowingReviewReport = false
     @State private var submittedReport: MerchantReportSubmission?
@@ -78,6 +79,11 @@ struct MerchantWorkspaceView: View {
                     }
                 )
                 .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if let selectedStoreDestination {
+                MerchantStoreDestinationPreviewView(destination: selectedStoreDestination) {
+                    withAnimation(.snappy(duration: 0.25)) { self.selectedStoreDestination = nil }
+                }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             } else if let selectedReview {
                 MerchantReviewDetailView(
                     review: selectedReview,
@@ -95,7 +101,15 @@ struct MerchantWorkspaceView: View {
             } else {
                 switch selectedTab {
                 case .home:
-                    MerchantHomeView(onSelectTab: { selectedTab = $0 })
+                    MerchantHomeView(
+                        onSelectTab: { selectedTab = $0 },
+                        onSelectStoreDestination: { destination in
+                            withAnimation(.snappy(duration: 0.25)) {
+                                selectedTab = .store
+                                selectedStoreDestination = destination
+                            }
+                        }
+                    )
                 case .reviews:
                     MerchantReviewManagementView(replyDrafts: replyDrafts, onSelectReview: { review in
                         withAnimation(.snappy(duration: 0.25)) {
@@ -107,7 +121,9 @@ struct MerchantWorkspaceView: View {
                         }
                     })
                 case .store:
-                    ComingSoonView(title: "매장 관리")
+                    MerchantStoreManagementView(onSelectDestination: { destination in
+                        withAnimation(.snappy(duration: 0.25)) { selectedStoreDestination = destination }
+                    })
                 case .more:
                     VStack(spacing: 20) {
                         ComingSoonView(title: "사업자 더보기")
@@ -134,6 +150,7 @@ struct MerchantWorkspaceView: View {
                     selectedTab = tab
                     selectedReview = nil
                     selectedReplyEdit = nil
+                    selectedStoreDestination = nil
                     isShowingReviewReport = false
                     isShowingReportStatus = false
                     submittedReport = nil
@@ -161,6 +178,7 @@ struct MerchantWorkspaceView: View {
 
 private struct MerchantHomeView: View {
     let onSelectTab: (MerchantTab) -> Void
+    let onSelectStoreDestination: (MerchantStoreDestination) -> Void
     @State private var isShowingNotice = false
 
     var body: some View {
@@ -329,16 +347,16 @@ private struct MerchantHomeView: View {
                 .font(.system(size: 14, weight: .heavy))
                 .foregroundStyle(Color.mossTextPrimary)
             HStack(spacing: 10) {
-                quickTask("text.bubble", title: "리뷰 답변", tab: .reviews)
-                quickTask("clock", title: "영업시간", tab: .store)
-                quickTask("shippingbox", title: "메뉴 관리", tab: .store)
-                quickTask("photo", title: "사진 관리", tab: .store)
+                quickTask("text.bubble", title: "리뷰 답변") { onSelectTab(.reviews) }
+                quickTask("clock", title: "영업시간") { onSelectStoreDestination(.operationInfo) }
+                quickTask("shippingbox", title: "메뉴 관리") { onSelectStoreDestination(.menu) }
+                quickTask("photo", title: "사진 관리") { onSelectStoreDestination(.photos) }
             }
         }
     }
 
-    private func quickTask(_ icon: String, title: String, tab: MerchantTab) -> some View {
-        Button { onSelectTab(tab) } label: {
+    private func quickTask(_ icon: String, title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             VStack(spacing: 5) {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: .medium))
@@ -392,5 +410,39 @@ private struct MerchantHomeView: View {
             .padding(13)
             .background(Color.mossSurface, in: RoundedRectangle(cornerRadius: 16))
         }
+    }
+}
+
+private struct MerchantStoreDestinationPreviewView: View {
+    let destination: MerchantStoreDestination
+    let onBack: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Color.mossTextPrimary)
+                        .frame(width: 40, height: 40)
+                }
+                .accessibilityLabel("매장 관리로 돌아가기")
+                Spacer()
+                Text(destination.rawValue)
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundStyle(Color.mossTextPrimary)
+                Spacer()
+                Color.clear.frame(width: 40, height: 40)
+            }
+            .padding(.horizontal, 20)
+            .frame(height: 60)
+            Text("이 화면은 Figma 순서에 따라 다음 단계에서 구현합니다.")
+                .font(.system(size: 13))
+                .foregroundStyle(Color.mossTextMuted)
+                .padding(.horizontal, 24)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color.mossBackground.ignoresSafeArea())
     }
 }
