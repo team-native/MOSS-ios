@@ -79,6 +79,11 @@ struct MerchantWorkspaceView: View {
                     }
                 )
                 .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if let selectedStoreDestination, selectedStoreDestination == .menu {
+                MerchantMenuManagementView {
+                    withAnimation(.snappy(duration: 0.25)) { self.selectedStoreDestination = nil }
+                }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             } else if let selectedStoreDestination {
                 MerchantStoreDestinationPreviewView(destination: selectedStoreDestination) {
                     withAnimation(.snappy(duration: 0.25)) { self.selectedStoreDestination = nil }
