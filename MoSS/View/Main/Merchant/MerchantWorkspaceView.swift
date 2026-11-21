@@ -24,14 +24,40 @@ struct MerchantWorkspaceView: View {
     @State private var selectedReview: MerchantReviewRecord?
     @State private var replyDrafts: [String: String] = [:]
     @State private var isShowingReviewReport = false
+    @State private var submittedReport: MerchantReportSubmission?
+    @State private var isShowingReportStatus = false
 
     var body: some View {
         Group {
-            if isShowingReviewReport, let selectedReview {
+            if isShowingReportStatus, let submittedReport {
+                MerchantReportStatusView(
+                    submission: submittedReport,
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) { isShowingReportStatus = false }
+                    },
+                    onReturnToReviews: {
+                        withAnimation(.snappy(duration: 0.25)) {
+                            isShowingReportStatus = false
+                            isShowingReviewReport = false
+                            self.submittedReport = nil
+                            selectedReview = nil
+                            selectedTab = .reviews
+                        }
+                    }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if isShowingReviewReport, let selectedReview {
                 MerchantReviewReportView(
                     review: selectedReview,
                     onBack: {
                         withAnimation(.snappy(duration: 0.25)) { isShowingReviewReport = false }
+                    },
+                    onSubmit: { reason, details in
+                        withAnimation(.snappy(duration: 0.28)) {
+                            submittedReport = MerchantReportSubmission(review: selectedReview, reason: reason, details: details)
+                            isShowingReviewReport = false
+                            isShowingReportStatus = true
+                        }
                     }
                 )
                 .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -85,6 +111,8 @@ struct MerchantWorkspaceView: View {
                     selectedTab = tab
                     selectedReview = nil
                     isShowingReviewReport = false
+                    isShowingReportStatus = false
+                    submittedReport = nil
                 } label: {
                     VStack(spacing: 3) {
                         Image(systemName: tab.icon)
