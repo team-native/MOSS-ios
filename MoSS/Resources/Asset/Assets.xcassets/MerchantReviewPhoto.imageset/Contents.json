@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "MerchantReviewPhoto.jpg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
