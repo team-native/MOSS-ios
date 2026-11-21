@@ -5,6 +5,8 @@ struct HomeView: View {
     @State private var selectedTab = "홈"
     @State private var searchText = ""
     @State private var selectedPlace: Place?
+    @State private var savedPlaceIDs = Set(Place.preview.prefix(3).map(\.id))
+    @State private var favoritesSortOrder = "거리순"
     @State private var selectedMapPlaceID = "aiming"
     @State private var placeSortOrder = "거리순"
     @State private var selectedReview: PlaceReview?
@@ -223,7 +225,12 @@ struct HomeView: View {
             } else if let selectedPlace {
                 PlaceDetailView(
                     place: selectedPlace,
-                    onBack: { self.selectedPlace = nil },
+                    savedPlaceIDs: $savedPlaceIDs,
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.28)) {
+                            self.selectedPlace = nil
+                        }
+                    },
                     onShowReviews: { isShowingReviewList = true },
                     onWriteReview: { isShowingReviewWrite = true },
                     onReport: { isShowingInfoErrorReport = true }
@@ -246,9 +253,16 @@ struct HomeView: View {
                     onPlaceSelected: { selectedPlace = $0 }
                 )
             } else if selectedTab == "찜" {
-                FavoritesView {
-                    selectedTab = "홈"
-                }
+                FavoritesView(
+                    savedPlaceIDs: $savedPlaceIDs,
+                    sortOrder: $favoritesSortOrder,
+                    onExplore: { selectedTab = "홈" },
+                    onSelectPlace: { place in
+                        withAnimation(.snappy(duration: 0.28)) {
+                            selectedPlace = place
+                        }
+                    }
+                )
             } else if selectedTab == "마이" {
                 MyPageView(
                     onShowFavorites: { selectedTab = "찜" },

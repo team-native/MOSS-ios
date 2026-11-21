@@ -2,13 +2,15 @@ import SwiftUI
 
 struct PlaceDetailView: View {
     let place: Place
+    @Binding var savedPlaceIDs: Set<String>
     let onBack: () -> Void
     let onShowReviews: () -> Void
     let onWriteReview: () -> Void
     let onReport: () -> Void
 
-    @State private var isFavorite = true
     @State private var isShowingFavoriteUndo = false
+
+    private var isFavorite: Bool { savedPlaceIDs.contains(place.id) }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -53,7 +55,7 @@ struct PlaceDetailView: View {
             Spacer(minLength: 4)
             Button("되돌리기") {
                 withAnimation(.easeInOut(duration: 0.2)) {
-                    isFavorite = true
+                    savedPlaceIDs.insert(place.id)
                     isShowingFavoriteUndo = false
                 }
             }
@@ -224,10 +226,10 @@ struct PlaceDetailView: View {
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     if isFavorite {
-                        isFavorite = false
+                        savedPlaceIDs.remove(place.id)
                         isShowingFavoriteUndo = true
                     } else {
-                        isFavorite = true
+                        savedPlaceIDs.insert(place.id)
                         isShowingFavoriteUndo = false
                     }
                 }
