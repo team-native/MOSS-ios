@@ -39,6 +39,7 @@ struct MerchantWorkspaceView: View {
     @State private var merchantEvents = MerchantEventRecord.sample
     @State private var merchantEventWeeklyCount = 1
     @State private var merchantEventFilter: MerchantEventFilter = .ongoing
+    @State private var selectedMerchantEvent: MerchantEventRecord?
 
     var body: some View {
         Group {
@@ -57,6 +58,29 @@ struct MerchantWorkspaceView: View {
                     }
                 )
                 .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if let selectedMerchantEvent {
+                MerchantEventEditView(
+                    event: selectedMerchantEvent,
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) { self.selectedMerchantEvent = nil }
+                    },
+                    onSave: { event in
+                        withAnimation(.snappy(duration: 0.3)) {
+                            if let index = merchantEvents.firstIndex(where: { $0.id == event.id }) {
+                                merchantEvents[index] = event
+                            }
+                            merchantEventFilter = MerchantEventFilter(rawValue: event.status.rawValue) ?? .ongoing
+                            self.selectedMerchantEvent = nil
+                        }
+                    },
+                    onDelete: {
+                        withAnimation(.snappy(duration: 0.3)) {
+                            merchantEvents.removeAll { $0.id == selectedMerchantEvent.id }
+                            self.selectedMerchantEvent = nil
+                        }
+                    }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             } else if isShowingEventManagement {
                 MerchantEventManagementView(
                     events: $merchantEvents,
@@ -67,6 +91,9 @@ struct MerchantWorkspaceView: View {
                     },
                     onCreate: {
                         withAnimation(.snappy(duration: 0.25)) { isShowingEventCreate = true }
+                    },
+                    onEdit: { event in
+                        withAnimation(.snappy(duration: 0.25)) { selectedMerchantEvent = event }
                     }
                 )
                 .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -263,6 +290,7 @@ struct MerchantWorkspaceView: View {
                     selectedStoreDestination = nil
                     isShowingEventManagement = false
                     isShowingEventCreate = false
+                    selectedMerchantEvent = nil
                     isShowingReviewReport = false
                     isShowingReportStatus = false
                     submittedReport = nil

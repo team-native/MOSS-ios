@@ -309,14 +309,12 @@ struct MerchantEventCreateView: View {
             return
         }
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "ko_KR")
-        dateFormatter.dateFormat = "MM.dd"
         let orderedTimes = MerchantEventQuietTime.allCases.filter { selectedQuietTimes.contains($0) }
         let newEvent = MerchantEventRecord(
             id: UUID().uuidString,
             title: trimmedTitle,
-            dateRange: "\(dateFormatter.string(from: startDate))–\(dateFormatter.string(from: endDate))",
+            startDate: startDate,
+            endDate: endDate,
             timeRange: orderedTimes.map(\.timeRange).joined(separator: " · "),
             details: trimmedDetails,
             status: .pending
