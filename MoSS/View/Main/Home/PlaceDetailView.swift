@@ -7,7 +7,8 @@ struct PlaceDetailView: View {
     let onWriteReview: () -> Void
     let onReport: () -> Void
 
-    @State private var isFavorite = false
+    @State private var isFavorite = true
+    @State private var isShowingFavoriteUndo = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -21,6 +22,48 @@ struct PlaceDetailView: View {
         }
         .background(Color.mossBackground.ignoresSafeArea())
         .ignoresSafeArea(edges: .top)
+        .overlay(alignment: .bottom) {
+            if isShowingFavoriteUndo {
+                favoriteUndoToast
+                    .padding(.horizontal, 42)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .task(id: isShowingFavoriteUndo) {
+            guard isShowingFavoriteUndo else { return }
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            if !Task.isCancelled {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isShowingFavoriteUndo = false
+                }
+            }
+        }
+    }
+
+    private var favoriteUndoToast: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "heart.slash")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.white)
+            Text("찜 목록에서 삭제했어요.")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+            Spacer(minLength: 4)
+            Button("되돌리기") {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isFavorite = true
+                    isShowingFavoriteUndo = false
+                }
+            }
+            .font(.system(size: 12, weight: .heavy))
+            .foregroundStyle(Color.mossSageTint)
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 44)
+        .background(Color.mossTextPrimary, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: Color.mossTextPrimary.opacity(0.15), radius: 16, y: 6)
     }
 
     private var heroCover: some View {
@@ -179,13 +222,29 @@ struct PlaceDetailView: View {
                     .background(Color.mossPrimaryGreen, in: RoundedRectangle(cornerRadius: 12))
             }
             Button {
-                isFavorite.toggle()
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    if isFavorite {
+                        isFavorite = false
+                        isShowingFavoriteUndo = true
+                    } else {
+                        isFavorite = true
+                        isShowingFavoriteUndo = false
+                    }
+                }
             } label: {
-                Label(isFavorite ? "찜됨" : "찜 2.4k", systemImage: isFavorite ? "heart.fill" : "heart")
+                Label(isFavorite ? "찜 2.4k" : "찜 해제됨", systemImage: isFavorite ? "heart" : "heart.slash")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(isFavorite ? Color.mossError : Color.mossTextPrimary)
+                    .foregroundStyle(isFavorite ? Color.mossPrimaryGreen : Color.mossTextMuted)
                     .frame(height: 44)
                     .padding(.horizontal, 10)
+                    .background(
+                        isFavorite ? Color.mossSageSoft : Color.mossBackground,
+                        in: RoundedRectangle(cornerRadius: 12)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isFavorite ? Color.mossPrimaryGreen : Color.mossLine, lineWidth: 1)
+                    }
             }
             .accessibilityLabel(isFavorite ? "찜 해제" : "장소 찜하기")
             Button(action: onReport) {
