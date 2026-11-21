@@ -6,10 +6,10 @@ struct ReviewDetailView: View {
     @Binding var isShowingDeleteConfirmation: Bool
     let onBack: () -> Void
     let onEdit: () -> Void
+    let onReport: () -> Void
     let onDelete: () -> Void
 
     @State private var isHelpful = false
-    @State private var alertMessage: String?
 
     private var ratingDescription: String {
         guard let rating = Double(review.rating) else { return "리뷰" }
@@ -41,11 +41,6 @@ struct ReviewDetailView: View {
             }
         }
         .animation(.easeInOut(duration: 0.15), value: isShowingDeleteConfirmation)
-        .alert("안내", isPresented: alertBinding) {
-            Button("확인", role: .cancel) { alertMessage = nil }
-        } message: {
-            Text(alertMessage ?? "")
-        }
     }
 
     private var header: some View {
@@ -63,9 +58,7 @@ struct ReviewDetailView: View {
                 .foregroundStyle(Color.mossTextPrimary)
             Spacer()
             Menu {
-                Button("신고하기", systemImage: "flag") {
-                    alertMessage = "리뷰 신고 화면은 다음 퍼블리싱 단계에서 연결할게요."
-                }
+                Button("신고하기", systemImage: "flag", action: onReport)
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 17, weight: .semibold))
@@ -238,10 +231,4 @@ struct ReviewDetailView: View {
         }
     }
 
-    private var alertBinding: Binding<Bool> {
-        Binding(
-            get: { alertMessage != nil },
-            set: { if !$0 { alertMessage = nil } }
-        )
-    }
 }
