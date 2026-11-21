@@ -24,6 +24,7 @@ struct MerchantWorkspaceView: View {
     @State private var selectedReview: MerchantReviewRecord?
     @State private var selectedReplyEdit: MerchantReviewRecord?
     @State private var selectedStoreDestination: MerchantStoreDestination?
+    @State private var operationInfoDraft = MerchantOperationInfoDraft.sample
     @State private var replyDrafts: [String: String] = [:]
     @State private var isShowingReviewReport = false
     @State private var submittedReport: MerchantReportSubmission?
@@ -78,6 +79,11 @@ struct MerchantWorkspaceView: View {
                         }
                     }
                 )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if let selectedStoreDestination, selectedStoreDestination == .operationInfo {
+                MerchantOperationInfoEditView(draft: $operationInfoDraft) {
+                    withAnimation(.snappy(duration: 0.25)) { self.selectedStoreDestination = nil }
+                }
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             } else if let selectedStoreDestination, selectedStoreDestination == .menu {
                 MerchantMenuManagementView {
