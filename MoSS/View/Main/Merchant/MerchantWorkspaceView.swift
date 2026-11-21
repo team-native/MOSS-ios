@@ -23,25 +23,40 @@ struct MerchantWorkspaceView: View {
     @State private var selectedTab: MerchantTab = .home
     @State private var selectedReview: MerchantReviewRecord?
     @State private var replyDrafts: [String: String] = [:]
-    @State private var isShowingReportPlaceholder = false
+    @State private var isShowingReviewReport = false
 
     var body: some View {
         Group {
-            if let selectedReview {
+            if isShowingReviewReport, let selectedReview {
+                MerchantReviewReportView(
+                    review: selectedReview,
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) { isShowingReviewReport = false }
+                    }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if let selectedReview {
                 MerchantReviewDetailView(
                     review: selectedReview,
                     existingReply: replyDrafts[selectedReview.id] ?? selectedReview.reply,
-                    onBack: { self.selectedReview = nil },
-                    onReport: { isShowingReportPlaceholder = true },
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) { self.selectedReview = nil }
+                    },
+                    onReport: {
+                        withAnimation(.snappy(duration: 0.25)) { isShowingReviewReport = true }
+                    },
                     onSaveDraft: { replyDrafts[selectedReview.id] = $0 },
                     onSubmitReply: { replyDrafts[selectedReview.id] = $0 }
                 )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             } else {
                 switch selectedTab {
                 case .home:
                     MerchantHomeView(onSelectTab: { selectedTab = $0 })
                 case .reviews:
-                    MerchantReviewManagementView(replyDrafts: replyDrafts, onSelectReview: { selectedReview = $0 })
+                    MerchantReviewManagementView(replyDrafts: replyDrafts, onSelectReview: { review in
+                        withAnimation(.snappy(duration: 0.25)) { selectedReview = review }
+                    })
                 case .store:
                     ComingSoonView(title: "매장 관리")
                 case .more:
@@ -57,11 +72,6 @@ struct MerchantWorkspaceView: View {
                 }
             }
         }
-        .alert("리뷰 신고", isPresented: $isShowingReportPlaceholder) {
-            Button("확인", role: .cancel) { }
-        } message: {
-            Text("신고 기능은 다음 화면 구현에서 연결됩니다.")
-        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             merchantTabBar
         }
@@ -74,6 +84,7 @@ struct MerchantWorkspaceView: View {
                 Button {
                     selectedTab = tab
                     selectedReview = nil
+                    isShowingReviewReport = false
                 } label: {
                     VStack(spacing: 3) {
                         Image(systemName: tab.icon)
