@@ -3,11 +3,11 @@ import SwiftUI
 struct MerchantReviewReportView: View {
     let review: MerchantReviewRecord
     let onBack: () -> Void
+    let onSubmit: (String, String) -> Void
 
     @State private var selectedReason = "허위 정보"
     @State private var details = "실제 매장 운영 시간과 다른 내용이 반복적으로 작성되어 다른 고객에게 혼란을 줄 수 있습니다."
     @State private var hasAttemptedSubmit = false
-    @State private var isShowingLocalSubmissionNotice = false
     @FocusState private var isDetailsFocused: Bool
 
     private let reasons = ["욕설·비방", "허위 정보", "광고·도배", "개인정보 노출", "기타"]
@@ -50,11 +50,6 @@ struct MerchantReviewReportView: View {
             }
         }
         .background(Color.mossBackground.ignoresSafeArea())
-        .alert("신고 제출 미리보기", isPresented: $isShowingLocalSubmissionNotice) {
-            Button("확인", action: onBack)
-        } message: {
-            Text("신고 내용은 이 화면 미리보기에만 반영됩니다. 실제 신고 접수와 알림은 서버 연결 후 제공됩니다.")
-        }
     }
 
     private var header: some View {
@@ -228,7 +223,7 @@ struct MerchantReviewReportView: View {
                         .frame(height: 50)
                         .background(Color.mossDarkAction, in: RoundedRectangle(cornerRadius: 12))
                 }
-                .sensoryFeedback(.success, trigger: isShowingLocalSubmissionNotice)
+                .sensoryFeedback(.error, trigger: hasAttemptedSubmit)
             }
         }
         .padding(14)
@@ -245,9 +240,7 @@ struct MerchantReviewReportView: View {
             }
             return
         }
-        withAnimation(.easeInOut(duration: 0.2)) {
-            isShowingLocalSubmissionNotice = true
-        }
+        onSubmit(selectedReason, trimmed)
     }
 
     private func dismissKeyboard() {
