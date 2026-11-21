@@ -5,6 +5,8 @@ struct HomeView: View {
     @State private var selectedTab = "홈"
     @State private var searchText = ""
     @State private var selectedPlace: Place?
+    @State private var selectedMapPlaceID = "aiming"
+    @State private var placeSortOrder = "거리순"
     @State private var selectedReview: PlaceReview?
     @State private var submittedReviews: [PlaceReview] = []
     @State private var reviewPlaces: [String: Place] = [:]
@@ -28,6 +30,18 @@ struct HomeView: View {
     @State private var isShowingMerchantPreview = false
 
     private let places = Place.preview
+
+    private var selectedMapPlace: Place? {
+        places.first(where: { $0.id == selectedMapPlaceID }) ?? places.first
+    }
+
+    private var sortedPlaces: [Place] {
+        switch placeSortOrder {
+        case "이름순": places.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        case "가격 낮은순": places.sorted { $0.hourlyPrice < $1.hourlyPrice }
+        default: places.sorted { $0.distanceInMeters < $1.distanceInMeters }
+        }
+    }
 
     private var hasVisibleReviews: Bool {
         let placeReviews = submittedReviews.filter { reviewPlaces[$0.id]?.id == selectedPlace?.id }
@@ -276,19 +290,28 @@ struct HomeView: View {
                     Spacer()
                 }
 
-                VStack(spacing: 0) {
-                    Text("에이밍 스터디카페   ₩2,500/h")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .background(Color.mossPrimaryGreen, in: RoundedRectangle(cornerRadius: 12))
-                    Image(systemName: "triangle.fill")
-                        .font(.system(size: 11))
-                        .rotationEffect(.degrees(180))
-                        .foregroundStyle(Color.mossPrimaryGreen)
+                if let selectedMapPlace {
+                    Button {
+                        selectedPlace = selectedMapPlace
+                    } label: {
+                        VStack(spacing: 0) {
+                            Text("\(selectedMapPlace.name)   \(selectedMapPlace.price.replacingOccurrences(of: "시간당 ", with: ""))/h")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 7)
+                                .background(Color.mossPrimaryGreen, in: RoundedRectangle(cornerRadius: 12))
+                            Image(systemName: "triangle.fill")
+                                .font(.system(size: 11))
+                                .rotationEffect(.degrees(180))
+                                .foregroundStyle(Color.mossPrimaryGreen)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(selectedMapPlace.name), \(selectedMapPlace.price). 장소 상세 보기")
+                    .position(x: geometry.size.width * 0.52, y: geometry.size.height * 0.38)
                 }
-                .position(x: geometry.size.width * 0.52, y: geometry.size.height * 0.38)
 
                 Image(systemName: "location.circle.fill")
                     .font(.system(size: 38))
@@ -317,9 +340,21 @@ struct HomeView: View {
                     .font(.system(size: 16, weight: .heavy))
                     .foregroundStyle(Color.mossTextPrimary)
                 Spacer()
-                Button {} label: {
+                Menu {
+                    ForEach(["거리순", "이름순", "가격 낮은순"], id: \.self) { option in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.22)) { placeSortOrder = option }
+                        } label: {
+                            if placeSortOrder == option {
+                                Label(option, systemImage: "checkmark")
+                            } else {
+                                Text(option)
+                            }
+                        }
+                    }
+                } label: {
                     HStack(spacing: 4) {
-                        Text("거리순")
+                        Text(placeSortOrder)
                         Image(systemName: "chevron.down")
                     }
                     .font(.system(size: 13, weight: .bold))
@@ -336,8 +371,11 @@ struct HomeView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 10) {
-                    ForEach(places) { place in
-                        PlaceCard(place: place) { selectedPlace = place }
+                    ForEach(sortedPlaces) { place in
+                        PlaceCard(place: place) {
+                            selectedMapPlaceID = place.id
+                            selectedPlace = place
+                        }
                     }
                     if session.isGuest {
                         guestPrompt
