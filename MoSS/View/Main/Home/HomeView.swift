@@ -24,6 +24,7 @@ struct HomeView: View {
     @State private var isShowingReportHistory = false
     @State private var selectedReport: ReportRecord?
     @State private var isShowingAccountDeletionComplete = false
+    @State private var isShowingProfileEdit = false
 
     private let places = Place.preview
 
@@ -38,6 +39,8 @@ struct HomeView: View {
                 AccountDeletionCompleteView(
                     onBack: { isShowingAccountDeletionComplete = false }
                 )
+            } else if isShowingProfileEdit {
+                ProfileEditView(onBack: { isShowingProfileEdit = false })
             } else if isShowingReviewWrite, let selectedPlace {
                 ReviewWriteView(
                     place: selectedPlace,
@@ -194,7 +197,8 @@ struct HomeView: View {
                     onShowFavorites: { selectedTab = "찜" },
                     onShowMyReviews: { isShowingMyReviewList = true },
                     onShowReportHistory: { isShowingReportHistory = true },
-                    onAccountDeletionComplete: { isShowingAccountDeletionComplete = true }
+                    onAccountDeletionComplete: { isShowingAccountDeletionComplete = true },
+                    onShowProfileEdit: { isShowingProfileEdit = true }
                 )
             } else {
                 ComingSoonView(title: selectedTab)

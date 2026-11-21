@@ -6,6 +6,7 @@ struct MyPageView: View {
     let onShowMyReviews: () -> Void
     let onShowReportHistory: () -> Void
     let onAccountDeletionComplete: () -> Void
+    let onShowProfileEdit: () -> Void
 
     @State private var alertMessage: String?
     @State private var isShowingAccountDeletionConfirmation = false
@@ -250,7 +251,7 @@ struct MyPageView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.mossBrandSage)
                 }
-                Button { alertMessage = "회원정보 수정은 서버 연동 작업에서 연결할 예정입니다." } label: {
+                Button(action: onShowProfileEdit) {
                     Text("회원정보 수정")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.mossBrandSage)
