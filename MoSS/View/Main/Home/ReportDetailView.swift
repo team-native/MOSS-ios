@@ -12,19 +12,18 @@ struct ReportDetailView: View {
         report.title.components(separatedBy: " · ").dropFirst().first ?? "장소 정보"
     }
 
-    private var reportNumber: String {
-        report.id == "report-price" ? "I-2601048" : "R-\(report.id.replacingOccurrences(of: "report-", with: "").uppercased())"
-    }
+    private var reportNumber: String { report.displayNumber }
 
     private var submittedDate: String {
         report.submittedAt.replacingOccurrences(of: " 접수", with: "").replacingOccurrences(of: "2026.", with: "")
     }
 
     private var activeStepCount: Int {
+        if report.isLocalPreview { return 0 }
         switch report.status {
-        case "접수": 1
-        case "검토 중": 2
-        default: 3
+        case "접수": return 1
+        case "검토 중": return 2
+        default: return 3
         }
     }
 
@@ -80,7 +79,7 @@ struct ReportDetailView: View {
             HStack {
                 badge(report.category.rawValue, background: Color(hex: 0xF0ECE8), foreground: Color.mossBrandSage)
                 Spacer()
-                badge(report.status, background: statusBackground, foreground: statusForeground)
+                badge(report.isLocalPreview ? "미리보기" : report.status, background: statusBackground, foreground: statusForeground)
             }
             Text(placeName)
                 .font(.system(size: 17, weight: .black))
@@ -106,9 +105,13 @@ struct ReportDetailView: View {
             Text("처리 상태")
                 .font(.system(size: 14, weight: .heavy))
                 .foregroundStyle(Color.mossTextPrimary)
-            timelineStep(index: 0, title: "접수", detail: "제보 내용을 안전하게 접수했어요.", date: submittedDate, icon: "checkmark")
-            timelineStep(index: 1, title: "검토", detail: "매장 안내와 제출 사진을 확인하고 있어요.", date: "10.02", icon: "magnifyingglass")
-            timelineStep(index: 2, title: "반영", detail: "확인된 정보를 장소 상세에 반영해요.", date: "예정", icon: "circle")
+            if report.isLocalPreview {
+                timelineStep(index: 0, title: "로컬 미리보기", detail: "이 내용은 서버에 제출되지 않았으며 실제 검토나 처리는 진행되지 않았어요.", date: submittedDate, icon: "eye")
+            } else {
+                timelineStep(index: 0, title: "접수", detail: "제보 내용을 안전하게 접수했어요.", date: submittedDate, icon: "checkmark")
+                timelineStep(index: 1, title: "검토", detail: "매장 안내와 제출 사진을 확인하고 있어요.", date: "10.02", icon: "magnifyingglass")
+                timelineStep(index: 2, title: "반영", detail: "확인된 정보를 장소 상세에 반영해요.", date: "예정", icon: "circle")
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -160,7 +163,7 @@ struct ReportDetailView: View {
             Image(systemName: "info.circle")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Color.mossPrimaryGreen)
-            Text("허위 제보가 아닌 이상 제보자에게 불이익은 없으며, 매장에는 제보자의 정보가 공개되지 않아요.")
+            Text(report.isLocalPreview ? "현재는 화면 확인용 로컬 데이터예요. 실제 접수·중복 확인·결과 알림은 서버 연결 후 제공됩니다." : "허위 제보가 아닌 이상 제보자에게 불이익은 없으며, 매장에는 제보자의 정보가 공개되지 않아요.")
                 .font(.system(size: 11))
                 .foregroundStyle(Color.mossPrimaryGreen)
                 .lineSpacing(3)
@@ -172,27 +175,30 @@ struct ReportDetailView: View {
     }
 
     private var resultMessage: String {
+        if report.isLocalPreview { return "제보 양식을 앱 화면에서 확인할 수 있도록 임시 저장했어요. 실제 접수·검토·정보 반영은 이루어지지 않았습니다." }
         switch report.status {
-        case "검토 중": "매장 확인을 요청했어요.\n반영이 완료되면 알림으로 알려드릴게요."
-        case "반영 완료": "제보 내용이 확인되어 장소 정보에 반영되었어요."
-        case "미반영": "제보 내용을 검토했지만 반영 기준에 맞지 않았어요."
-        default: "제보가 접수되었어요. 확인이 끝나면 알림으로 알려드릴게요."
+        case "검토 중": return "매장 확인을 요청했어요.\n반영이 완료되면 알림으로 알려드릴게요."
+        case "반영 완료": return "제보 내용이 확인되어 장소 정보에 반영되었어요."
+        case "미반영": return "제보 내용을 검토했지만 반영 기준에 맞지 않았어요."
+        default: return "제보가 접수되었어요. 확인이 끝나면 알림으로 알려드릴게요."
         }
     }
 
     private var statusBackground: Color {
+        if report.isLocalPreview { return Color(hex: 0xFFF8ED) }
         switch report.status {
-        case "검토 중": Color(hex: 0xFFF8ED)
-        case "반영 완료": Color(hex: 0xE3ECE7)
-        default: Color(hex: 0xF0ECE8)
+        case "검토 중": return Color(hex: 0xFFF8ED)
+        case "반영 완료": return Color(hex: 0xE3ECE7)
+        default: return Color(hex: 0xF0ECE8)
         }
     }
 
     private var statusForeground: Color {
+        if report.isLocalPreview { return Color(hex: 0x7A4E1B) }
         switch report.status {
-        case "검토 중": Color(hex: 0x7A4E1B)
-        case "반영 완료": Color.mossPrimaryGreen
-        default: Color.mossBrandSage
+        case "검토 중": return Color(hex: 0x7A4E1B)
+        case "반영 완료": return Color.mossPrimaryGreen
+        default: return Color.mossBrandSage
         }
     }
 

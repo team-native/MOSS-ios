@@ -14,6 +14,7 @@ struct ReportRecord: Identifiable {
     let summary: String
     let submittedAt: String
     let status: String
+    var isLocalPreview = false
 
     static let preview: [ReportRecord] = [
         ReportRecord(
@@ -60,14 +61,15 @@ struct ReportRecord: Identifiable {
 }
 
 struct ReportHistoryView: View {
+    @Binding var reports: [ReportRecord]
     let onBack: () -> Void
     let onSelectReport: (ReportRecord) -> Void
 
     @State private var selectedCategory: ReportCategory?
 
     private var filteredReports: [ReportRecord] {
-        guard let selectedCategory else { return ReportRecord.preview }
-        return ReportRecord.preview.filter { $0.category == selectedCategory }
+        guard let selectedCategory else { return reports }
+        return reports.filter { $0.category == selectedCategory }
     }
 
     var body: some View {
@@ -77,7 +79,7 @@ struct ReportHistoryView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     categoryFilter
                     HStack {
-                        Text("내 제보 5건")
+                        Text("내 제보 \(reports.count)건")
                             .font(.system(size: 14, weight: .heavy))
                             .foregroundStyle(Color.mossTextPrimary)
                         Spacer()
@@ -121,9 +123,9 @@ struct ReportHistoryView: View {
 
     private var categoryFilter: some View {
         HStack(spacing: 4) {
-            filterButton(title: "전체 5", category: nil)
-            filterButton(title: "스팟 2", category: .spot)
-            filterButton(title: "정보 오류 3", category: .information)
+            filterButton(title: "전체 \(reports.count)", category: nil)
+            filterButton(title: "스팟 \(reports.filter { $0.category == .spot }.count)", category: .spot)
+            filterButton(title: "정보 오류 \(reports.filter { $0.category == .information }.count)", category: .information)
         }
         .padding(4)
         .background(Color(hex: 0xEFECE6), in: RoundedRectangle(cornerRadius: 12))
