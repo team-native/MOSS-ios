@@ -2,7 +2,7 @@ import SwiftUI
 
 struct InfoErrorReportResultView: View {
     let report: ReportRecord
-    let onViewStatus: () -> Void
+    let onViewLocalDetails: () -> Void
     let onReturnToPlace: () -> Void
 
     private var placeName: String {
@@ -25,8 +25,8 @@ struct InfoErrorReportResultView: View {
                     successMessage
                     reportSummary
                     localPreviewNotice
-                    Button(action: onViewStatus) {
-                        Text("제보 처리 현황 보기")
+                    Button(action: onViewLocalDetails) {
+                        Text("로컬 미리보기 상세 보기")
                             .font(.system(size: 14, weight: .heavy))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -66,7 +66,7 @@ struct InfoErrorReportResultView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("장소 상세로 돌아가기")
             Spacer()
-            Text("제보 접수 완료")
+            Text("제보 미리보기")
                 .font(.system(size: 16, weight: .heavy))
                 .foregroundStyle(Color.mossTextPrimary)
             Spacer()
@@ -90,11 +90,11 @@ struct InfoErrorReportResultView: View {
             .background(Color(hex: 0xE3ECE7), in: Circle())
             .symbolEffect(.bounce, value: report.id)
 
-            Text("정보 오류 제보를 접수했어요")
+            Text("제보 내용이 준비됐어요")
                 .font(.system(size: 18, weight: .black))
                 .foregroundStyle(Color.mossTextPrimary)
                 .multilineTextAlignment(.center)
-            Text("입력한 내용은 이 화면에서만 확인하는 로컬 미리보기예요.\n실제 접수·정보 반영·알림은 서버 연결 후 제공됩니다.")
+            Text("제보 내용은 앱 실행 중 화면 미리보기 상태로만 유지돼요.\n앱을 종료하면 사라지며, 실제 접수·사진 전송·알림은 서버 연결 후 제공됩니다.")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.mossBrandSage)
                 .multilineTextAlignment(.center)
@@ -133,7 +133,7 @@ struct InfoErrorReportResultView: View {
             Image(systemName: "doc.on.clipboard")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Color(hex: 0x7A4E1B))
-            Text("사진은 전송되지 않았고 중복 제보 확인이나 처리 현황 조회도 하지 않았어요. 이 항목은 앱 안의 로컬 미리보기입니다.")
+            Text("제보 내용은 서버에 전송되지 않았어요. 사진 업로드·중복 확인·실제 처리 현황 조회도 하지 않았습니다.")
                 .font(.system(size: 11))
                 .foregroundStyle(Color(hex: 0x7A4E1B))
                 .fixedSize(horizontal: false, vertical: true)

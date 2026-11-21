@@ -210,7 +210,7 @@ struct InfoErrorReportView: View {
             Image("InfoReportInfo")
                 .frame(width: 14.4, height: 14.4)
                 .foregroundStyle(Color(hex: 0xEAA850))
-            Text("입력한 내용과 사진 선택은 로컬 미리보기에서만 유지돼요. 실제 접수·사진 전송·처리 결과 안내는 서버 연결 후 제공됩니다.")
+            Text("입력 내용은 현재 앱 실행 중 미리보기로만 유지돼요. 앱을 종료하면 사라지며, 실제 접수·사진 전송·처리 결과 안내는 서버 연결 후 제공됩니다.")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(Color(hex: 0x7A4E1B))
                 .lineSpacing(2)

@@ -168,7 +168,7 @@ struct HomeView: View {
             } else if isShowingInfoErrorReportResult, let submittedInfoErrorReport {
                 InfoErrorReportResultView(
                     report: submittedInfoErrorReport,
-                    onViewStatus: {
+                    onViewLocalDetails: {
                         withAnimation(.snappy(duration: 0.28)) {
                             isShowingInfoErrorReportResult = false
                             selectedPlace = nil

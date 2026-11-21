@@ -160,7 +160,7 @@ struct ReportHistoryView: View {
                 HStack {
                     statusBadge(report.category.rawValue, background: Color(hex: 0xF0ECE8), foreground: Color.mossBrandSage)
                     Spacer()
-                    statusBadge(report.status, background: statusBackground(report.status), foreground: statusForeground(report.status))
+                    statusBadge(report.isLocalPreview ? "미리보기" : report.status, background: statusBackground(report.status), foreground: statusForeground(report.status))
                 }
                 Text(report.title)
                     .font(.system(size: 14, weight: .heavy))
@@ -195,6 +195,7 @@ struct ReportHistoryView: View {
 
     private func statusBackground(_ status: String) -> Color {
         switch status {
+        case "로컬 미리보기": Color(hex: 0xFFF8ED)
         case "검토 중": Color(hex: 0xFFF8ED)
         case "반영 완료": Color(hex: 0xE3ECE7)
         default: Color(hex: 0xF0ECE8)
@@ -203,6 +204,7 @@ struct ReportHistoryView: View {
 
     private func statusForeground(_ status: String) -> Color {
         switch status {
+        case "로컬 미리보기": Color(hex: 0x7A4E1B)
         case "검토 중": Color(hex: 0x7A4E1B)
         case "반영 완료": Color.mossPrimaryGreen
         default: Color.mossBrandSage
