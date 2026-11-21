@@ -21,31 +21,52 @@ enum MerchantTab: String, CaseIterable, Identifiable {
 struct MerchantWorkspaceView: View {
     let onExit: () -> Void
     @State private var selectedTab: MerchantTab = .home
+    @State private var selectedReview: MerchantReviewRecord?
 
     var body: some View {
         Group {
-            switch selectedTab {
-            case .home:
-                MerchantHomeView(onSelectTab: { selectedTab = $0 })
-            case .reviews:
-                ComingSoonView(title: "사업자 리뷰")
-            case .store:
-                ComingSoonView(title: "매장 관리")
-            case .more:
-                VStack(spacing: 20) {
-                    ComingSoonView(title: "사업자 더보기")
-                    Button(action: onExit) {
-                        Text("일반 사용자 화면으로 돌아가기")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Color.mossPrimaryGreen)
+            if let selectedReview {
+                reviewDetailPlaceholder(for: selectedReview)
+            } else {
+                switch selectedTab {
+                case .home:
+                    MerchantHomeView(onSelectTab: { selectedTab = $0 })
+                case .reviews:
+                    MerchantReviewManagementView(onSelectReview: { selectedReview = $0 })
+                case .store:
+                    ComingSoonView(title: "매장 관리")
+                case .more:
+                    VStack(spacing: 20) {
+                        ComingSoonView(title: "사업자 더보기")
+                        Button(action: onExit) {
+                            Text("일반 사용자 화면으로 돌아가기")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(Color.mossPrimaryGreen)
+                        }
+                        .padding(.bottom, 24)
                     }
-                    .padding(.bottom, 24)
                 }
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             merchantTabBar
         }
+        .background(Color.mossBackground.ignoresSafeArea())
+    }
+
+    private func reviewDetailPlaceholder(for review: MerchantReviewRecord) -> some View {
+        VStack(spacing: 18) {
+            Text("리뷰 상세")
+                .font(.system(size: 16, weight: .heavy))
+                .foregroundStyle(Color.mossTextPrimary)
+            Text(review.author)
+                .font(.system(size: 14))
+                .foregroundStyle(Color.mossBrandSage)
+            Button("리뷰 목록으로 돌아가기") { selectedReview = nil }
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(Color.mossPrimaryGreen)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.mossBackground.ignoresSafeArea())
     }
 
