@@ -22,17 +22,26 @@ struct MerchantWorkspaceView: View {
     let onExit: () -> Void
     @State private var selectedTab: MerchantTab = .home
     @State private var selectedReview: MerchantReviewRecord?
+    @State private var replyDrafts: [String: String] = [:]
+    @State private var isShowingReportPlaceholder = false
 
     var body: some View {
         Group {
             if let selectedReview {
-                reviewDetailPlaceholder(for: selectedReview)
+                MerchantReviewDetailView(
+                    review: selectedReview,
+                    existingReply: replyDrafts[selectedReview.id] ?? selectedReview.reply,
+                    onBack: { self.selectedReview = nil },
+                    onReport: { isShowingReportPlaceholder = true },
+                    onSaveDraft: { replyDrafts[selectedReview.id] = $0 },
+                    onSubmitReply: { replyDrafts[selectedReview.id] = $0 }
+                )
             } else {
                 switch selectedTab {
                 case .home:
                     MerchantHomeView(onSelectTab: { selectedTab = $0 })
                 case .reviews:
-                    MerchantReviewManagementView(onSelectReview: { selectedReview = $0 })
+                    MerchantReviewManagementView(replyDrafts: replyDrafts, onSelectReview: { selectedReview = $0 })
                 case .store:
                     ComingSoonView(title: "매장 관리")
                 case .more:
@@ -48,25 +57,14 @@ struct MerchantWorkspaceView: View {
                 }
             }
         }
+        .alert("리뷰 신고", isPresented: $isShowingReportPlaceholder) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text("신고 기능은 다음 화면 구현에서 연결됩니다.")
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             merchantTabBar
         }
-        .background(Color.mossBackground.ignoresSafeArea())
-    }
-
-    private func reviewDetailPlaceholder(for review: MerchantReviewRecord) -> some View {
-        VStack(spacing: 18) {
-            Text("리뷰 상세")
-                .font(.system(size: 16, weight: .heavy))
-                .foregroundStyle(Color.mossTextPrimary)
-            Text(review.author)
-                .font(.system(size: 14))
-                .foregroundStyle(Color.mossBrandSage)
-            Button("리뷰 목록으로 돌아가기") { selectedReview = nil }
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(Color.mossPrimaryGreen)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.mossBackground.ignoresSafeArea())
     }
 
@@ -75,6 +73,7 @@ struct MerchantWorkspaceView: View {
             ForEach(MerchantTab.allCases) { tab in
                 Button {
                     selectedTab = tab
+                    selectedReview = nil
                 } label: {
                     VStack(spacing: 3) {
                         Image(systemName: tab.icon)
