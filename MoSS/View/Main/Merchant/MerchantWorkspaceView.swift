@@ -34,10 +34,18 @@ struct MerchantWorkspaceView: View {
     @State private var isShowingBusinessVerification = false
     @State private var isShowingVerificationPending = false
     @State private var submittedVerification: MerchantBusinessVerificationSubmission?
+    @State private var isShowingEventManagement = false
+    @State private var merchantEvents = MerchantEventRecord.sample
+    @State private var merchantEventWeeklyCount = 1
 
     var body: some View {
         Group {
-            if isShowingBusinessVerification {
+            if isShowingEventManagement {
+                MerchantEventManagementView(events: $merchantEvents, weeklyEventCount: $merchantEventWeeklyCount) {
+                    withAnimation(.snappy(duration: 0.25)) { isShowingEventManagement = false }
+                }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if isShowingBusinessVerification {
                 MerchantBusinessVerificationView(
                     onBack: {
                         withAnimation(.snappy(duration: 0.25)) { isShowingBusinessVerification = false }
@@ -160,6 +168,12 @@ struct MerchantWorkspaceView: View {
                 case .home:
                     MerchantHomeView(
                         onSelectTab: { selectedTab = $0 },
+                        onSelectEvents: {
+                            withAnimation(.snappy(duration: 0.25)) {
+                                selectedTab = .store
+                                isShowingEventManagement = true
+                            }
+                        },
                         onSelectStoreDestination: { destination in
                             withAnimation(.snappy(duration: 0.25)) {
                                 selectedTab = .store
@@ -222,6 +236,7 @@ struct MerchantWorkspaceView: View {
                     selectedReview = nil
                     selectedReplyEdit = nil
                     selectedStoreDestination = nil
+                    isShowingEventManagement = false
                     isShowingReviewReport = false
                     isShowingReportStatus = false
                     submittedReport = nil
@@ -249,6 +264,7 @@ struct MerchantWorkspaceView: View {
 
 private struct MerchantHomeView: View {
     let onSelectTab: (MerchantTab) -> Void
+    let onSelectEvents: () -> Void
     let onSelectStoreDestination: (MerchantStoreDestination) -> Void
     @State private var isShowingNotice = false
 
@@ -350,7 +366,7 @@ private struct MerchantHomeView: View {
                 onSelectTab(.reviews)
             }
             statCard(title: "진행 이벤트", value: "1", caption: "오늘 종료 예정", icon: "eye") {
-                onSelectTab(.more)
+                onSelectEvents()
             }
         }
     }
