@@ -18,12 +18,15 @@ struct HomeView: View {
     @State private var isShowingReviewDeleteRecovery = false
     @State private var isShowingReviewReport = false
     @State private var isShowingInfoErrorReport = false
+    @State private var isShowingInfoErrorReportResult = false
+    @State private var submittedInfoErrorReport: ReportRecord?
     @State private var reviewDeletedAt = Date()
     @State private var isShowingLocationPermission = false
     @State private var isShowingReviewList = false
     @State private var isShowingMyReviewList = false
     @State private var isReturningToMyReviewList = false
     @State private var isShowingReportHistory = false
+    @State private var reportHistory = ReportRecord.preview
     @State private var selectedReport: ReportRecord?
     @State private var isShowingAccountDeletionComplete = false
     @State private var isShowingProfileEdit = false
@@ -151,7 +154,43 @@ struct HomeView: View {
             } else if isShowingInfoErrorReport, let selectedPlace {
                 InfoErrorReportView(
                     place: selectedPlace,
-                    onBack: { isShowingInfoErrorReport = false }
+                    onBack: { isShowingInfoErrorReport = false },
+                    onSubmit: { submittedReport in
+                        var report = submittedReport
+                        let dateCode = String(report.submittedAt.prefix(10))
+                            .replacingOccurrences(of: ".", with: "")
+                            .suffix(6)
+                        let nextSequence = reportHistory.filter { $0.isLocalPreview }.count + 1
+                        let sequenceText = String(nextSequence)
+                        let sequence = String(repeating: "0", count: max(0, 3 - sequenceText.count)) + sequenceText
+                        report.localReceiptNumber = "LOCAL-\(dateCode)-\(sequence)"
+                        withAnimation(.snappy(duration: 0.3)) {
+                            reportHistory.insert(report, at: 0)
+                            submittedInfoErrorReport = report
+                            isShowingInfoErrorReport = false
+                            isShowingInfoErrorReportResult = true
+                            selectedTab = "마이"
+                        }
+                    }
+                )
+            } else if isShowingInfoErrorReportResult, let submittedInfoErrorReport {
+                InfoErrorReportResultView(
+                    report: submittedInfoErrorReport,
+                    onViewLocalDetails: {
+                        withAnimation(.snappy(duration: 0.28)) {
+                            isShowingInfoErrorReportResult = false
+                            selectedPlace = nil
+                            selectedTab = "마이"
+                            selectedReport = submittedInfoErrorReport
+                        }
+                    },
+                    onReturnToPlace: {
+                        withAnimation(.snappy(duration: 0.25)) {
+                            isShowingInfoErrorReportResult = false
+                            self.submittedInfoErrorReport = nil
+                            selectedTab = "홈"
+                        }
+                    }
                 )
             } else if let selectedReport {
                 ReportDetailView(
@@ -163,6 +202,7 @@ struct HomeView: View {
                 )
             } else if isShowingReportHistory {
                 ReportHistoryView(
+                    reports: $reportHistory,
                     onBack: { isShowingReportHistory = false },
                     onSelectReport: { selectedReport = $0 }
                 )
@@ -455,6 +495,8 @@ struct HomeView: View {
             isShowingReviewDeleteRecovery = false
             isShowingReviewReport = false
             isShowingInfoErrorReport = false
+            isShowingInfoErrorReportResult = false
+            submittedInfoErrorReport = nil
             selectedReview = nil
             isShowingReviewList = false
             isShowingMyReviewList = false

@@ -4,13 +4,19 @@ import SwiftUI
 struct InfoErrorReportView: View {
     let place: Place
     let onBack: () -> Void
+    let onSubmit: (ReportRecord) -> Void
 
     @State private var selectedCategory = "가격"
     @State private var reportText = "가격 정보가 달라서 제 전재산은 2500원 뿐이었는데 3000이더라고요. 가격이 인상됐어요. 신속한 수정 부탁드립니다."
     @State private var selectedPhotos: [PhotosPickerItem] = []
-    @State private var isShowingPreviewNotice = false
+    @State private var hasAttemptedSubmit = false
+    @FocusState private var isReportTextFocused: Bool
 
     private let categories = ["가격", "연령 제한", "운영 시간", "소음", "구비 시설", "기타"]
+
+    private var isReportTextValid: Bool {
+        !reportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,11 +26,13 @@ struct InfoErrorReportView: View {
                     placeSummary
                     categorySelector
                     reportContent
+                    if hasAttemptedSubmit && !isReportTextValid {
+                        validationNotice
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
                     attachmentSection
                     notice
-                    Button {
-                        isShowingPreviewNotice = true
-                    } label: {
+                    Button(action: submit) {
                         Text("제보하기")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(.white)
@@ -33,20 +41,22 @@ struct InfoErrorReportView: View {
                             .background(Color.mossDarkAction, in: RoundedRectangle(cornerRadius: 14))
                             .shadow(color: Color.mossTextPrimary.opacity(0.08), radius: 6, y: 4)
                     }
-                    .disabled(reportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    .opacity(reportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.55 : 1)
+                    .opacity(isReportTextValid ? 1 : 0.7)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 12)
                 .padding(.bottom, 28)
             }
+            .scrollDismissesKeyboard(.interactively)
+            .background {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { isReportTextFocused = false }
+            }
         }
         .background(Color.mossBackground.ignoresSafeArea())
-        .alert("제보 미리보기", isPresented: $isShowingPreviewNotice) {
-            Button("확인", action: onBack)
-        } message: {
-            Text("제보 내용은 이 기기에만 표시됩니다. 실제 접수와 처리 결과 안내는 서버 연결 후 제공됩니다.")
-        }
+        .animation(.spring(response: 0.32, dampingFraction: 0.84), value: hasAttemptedSubmit)
+        .animation(.spring(response: 0.32, dampingFraction: 0.84), value: isReportTextValid)
     }
 
     private var header: some View {
@@ -139,6 +149,7 @@ struct InfoErrorReportView: View {
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, -4)
                         .padding(.vertical, -6)
+                        .focused($isReportTextFocused)
                         .onChange(of: reportText) { _, newValue in
                             if newValue.count > 500 {
                                 reportText = String(newValue.prefix(500))
@@ -199,7 +210,7 @@ struct InfoErrorReportView: View {
             Image("InfoReportInfo")
                 .frame(width: 14.4, height: 14.4)
                 .foregroundStyle(Color(hex: 0xEAA850))
-            Text("제보해주신 내용은 검열 후 신속하게 반영될 예정입니다. 다만 허위 사실 제보 시 불이익이 있을 수 있습니다.")
+            Text("입력 내용은 현재 앱 실행 중 미리보기로만 유지돼요. 앱을 종료하면 사라지며, 실제 접수·사진 전송·처리 결과 안내는 서버 연결 후 제공됩니다.")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(Color(hex: 0x7A4E1B))
                 .lineSpacing(2)
@@ -207,6 +218,20 @@ struct InfoErrorReportView: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(hex: 0xFFF9F0), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var validationNotice: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.circle.fill")
+                .font(.system(size: 14, weight: .semibold))
+            Text("제보 내용을 입력해주세요.")
+                .font(.system(size: 12, weight: .semibold))
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(Color.mossWarning)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(hex: 0xFFF4F2), in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func requiredTitle(_ title: String) -> some View {
@@ -218,5 +243,27 @@ struct InfoErrorReportView: View {
                 .font(.system(size: 14, weight: .heavy))
                 .foregroundStyle(Color.mossWarning)
         }
+    }
+
+    private func submit() {
+        hasAttemptedSubmit = true
+        guard isReportTextValid else {
+            isReportTextFocused = true
+            return
+        }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy.MM.dd"
+        let report = ReportRecord(
+            id: "report-local-\(UUID().uuidString)",
+            category: .information,
+            title: "\(place.name) · \(selectedCategory)",
+            summary: reportText.trimmingCharacters(in: .whitespacesAndNewlines),
+            submittedAt: "\(formatter.string(from: Date())) 접수",
+            status: "로컬 미리보기",
+            isLocalPreview: true
+        )
+        isReportTextFocused = false
+        onSubmit(report)
     }
 }
