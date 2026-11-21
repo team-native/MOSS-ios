@@ -3,6 +3,7 @@ import SwiftUI
 struct MyPageView: View {
     @EnvironmentObject private var session: SessionManager
     let onShowFavorites: () -> Void
+    let onShowMyReviews: () -> Void
 
     @State private var alertMessage: String?
 
@@ -97,9 +98,7 @@ struct MyPageView: View {
                 .foregroundStyle(Color.mossTextPrimary)
 
             VStack(spacing: 1) {
-                activityRow("bubble.left", title: "내가 쓴 리뷰 목록") {
-                    alertMessage = "리뷰 목록은 다음 화면 작업에서 연결할 예정입니다."
-                }
+                activityRow("bubble.left", title: "내가 쓴 리뷰 목록", action: onShowMyReviews)
                 activityRow("heart", title: "내 찜 목록 확인", action: onShowFavorites)
                 activityRow("mappin.and.ellipse", title: "내 스터디 스팟 제보 및 오류 제보 내역") {
                     alertMessage = "제보 내역은 추후 화면에서 확인할 수 있습니다."
