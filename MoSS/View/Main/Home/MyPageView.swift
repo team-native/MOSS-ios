@@ -62,7 +62,7 @@ struct MyPageView: View {
 
     private var profileCard: some View {
         HStack(spacing: 16) {
-            Image("MockProfile")
+            Image("MyPageHamsterAvatar")
                 .resizable()
                 .scaledToFill()
                 .frame(width: 60, height: 60)
@@ -71,19 +71,19 @@ struct MyPageView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
-                    Text(session.isGuest ? "비회원" : "MOSS 사용자")
+                    Text(session.isGuest ? "비회원" : "제초 5급 노리는 햄스터")
                         .font(.system(size: 18, weight: .heavy))
                         .foregroundStyle(Color.mossTextPrimary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
-                    Text(session.isGuest ? "게스트" : "회원")
+                    Text(session.isGuest ? "게스트" : "대학생")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(Color.mossPrimaryGreen)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
                         .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 6))
                 }
-                Text(session.isGuest ? "로그인 후 활동을 확인할 수 있어요" : "로그인한 계정 정보")
+                Text(session.isGuest ? "로그인 후 활동을 확인할 수 있어요" : "s26043@gsm.hs.kr")
                     .font(.system(size: 13))
                     .foregroundStyle(Color.mossBrandSage)
                     .lineLimit(1)
