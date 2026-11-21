@@ -30,8 +30,20 @@ struct Place: Identifiable {
 struct PlaceCard: View {
     let place: Place
     var showsFavorite = false
+    var onTap: (() -> Void)? = nil
 
     var body: some View {
+        Group {
+            if let onTap {
+                Button(action: onTap) { cardContent }
+                    .buttonStyle(.plain)
+            } else {
+                cardContent
+            }
+        }
+    }
+
+    private var cardContent: some View {
         HStack(spacing: 12) {
             Image(place.imageName)
                 .resizable()

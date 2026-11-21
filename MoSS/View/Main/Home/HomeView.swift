@@ -4,17 +4,24 @@ struct HomeView: View {
     @EnvironmentObject private var session: SessionManager
     @State private var selectedTab = "홈"
     @State private var searchText = ""
+    @State private var selectedPlace: Place?
 
     private let places = Place.preview
 
     var body: some View {
         Group {
-            if selectedTab == "홈" {
+            if let selectedPlace {
+                PlaceDetailView(place: selectedPlace) {
+                    self.selectedPlace = nil
+                }
+            } else if selectedTab == "홈" {
                 homeContent
             } else if selectedTab == "검색" {
-                SearchView(searchText: $searchText) {
-                    selectedTab = "홈"
-                }
+                SearchView(
+                    searchText: $searchText,
+                    onBack: { selectedTab = "홈" },
+                    onPlaceSelected: { selectedPlace = $0 }
+                )
             } else if selectedTab == "찜" {
                 FavoritesView {
                     selectedTab = "홈"
@@ -151,7 +158,9 @@ struct HomeView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 10) {
-                    ForEach(places) { place in PlaceCard(place: place) }
+                    ForEach(places) { place in
+                        PlaceCard(place: place) { selectedPlace = place }
+                    }
                     if session.isGuest {
                         guestPrompt
                     } else {
@@ -223,7 +232,10 @@ struct HomeView: View {
     }
 
     private func tabItem(_ title: String, icon: String) -> some View {
-        Button { selectedTab = title } label: {
+        Button {
+            selectedPlace = nil
+            selectedTab = title
+        } label: {
             VStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.system(size: 23, weight: selectedTab == title ? .semibold : .regular))
