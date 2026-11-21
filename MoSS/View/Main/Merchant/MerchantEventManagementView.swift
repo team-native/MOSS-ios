@@ -17,15 +17,39 @@ enum MerchantEventStatus: String, Equatable, Identifiable {
 struct MerchantEventRecord: Identifiable, Equatable {
     let id: String
     var title: String
-    var dateRange: String
+    var startDate: Date
+    var endDate: Date
     var timeRange: String
     var details: String
     var status: MerchantEventStatus
+    var isVisibleInStore = true
+
+    var dateRange: String {
+        "\(Self.formatShortDate(startDate))–\(Self.formatShortDate(endDate))"
+    }
+
+    var daysRemaining: Int {
+        let today = Calendar.current.startOfDay(for: Date())
+        let end = Calendar.current.startOfDay(for: endDate)
+        return max(0, Calendar.current.dateComponents([.day], from: today, to: end).day ?? 0)
+    }
+
+    private static func sampleDate(offsetDays: Int) -> Date {
+        let today = Calendar.current.startOfDay(for: Date())
+        return Calendar.current.date(byAdding: .day, value: offsetDays, to: today) ?? today
+    }
+
+    private static func formatShortDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "MM.dd"
+        return formatter.string(from: date)
+    }
 
     static let sample: [MerchantEventRecord] = [
-        .init(id: "night-discount", title: "시험 기간 심야 이용권 20% 할인", dateRange: "10.01–10.14", timeRange: "평일 21:00–24:00", details: "한산한 시간대에 4시간권을 할인해요.", status: .ongoing),
-        .init(id: "morning-upgrade", title: "오전 집중석 무료 업그레이드", dateRange: "10.08–10.12", timeRange: "평일 09:00–12:00", details: "운영 정책 검토 중이며 최대 1일이 소요돼요.", status: .pending),
-        .init(id: "autumn-snack", title: "가을 맞이 닭발 무료 나눔 이벤트", dateRange: "09.15–09.21", timeRange: "매일 10:00–16:00", details: "총 38명이 이벤트를 확인했어요.", status: .ended)
+        .init(id: "night-discount", title: "시험 기간 심야 이용권 20% 할인", startDate: sampleDate(offsetDays: -9), endDate: sampleDate(offsetDays: 4), timeRange: "평일 21:00–24:00", details: "한산한 시간대에 4시간권을 할인해요.", status: .ongoing),
+        .init(id: "morning-upgrade", title: "오전 집중석 무료 업그레이드", startDate: sampleDate(offsetDays: -1), endDate: sampleDate(offsetDays: 5), timeRange: "평일 09:00–12:00", details: "운영 정책 검토 중이며 최대 1일이 소요돼요.", status: .pending),
+        .init(id: "autumn-snack", title: "가을 맞이 닭발 무료 나눔 이벤트", startDate: sampleDate(offsetDays: -20), endDate: sampleDate(offsetDays: -14), timeRange: "매일 10:00–16:00", details: "총 38명이 이벤트를 확인했어요.", status: .ended)
     ]
 }
 
@@ -35,9 +59,8 @@ struct MerchantEventManagementView: View {
     @Binding var selectedFilter: MerchantEventFilter
     let onBack: () -> Void
     let onCreate: () -> Void
+    let onEdit: (MerchantEventRecord) -> Void
 
-    @State private var editingEvent: MerchantEventRecord?
-    @State private var isShowingEditor = false
     @State private var isShowingLimitAlert = false
 
     private var visibleEvents: [MerchantEventRecord] {
@@ -77,11 +100,6 @@ struct MerchantEventManagementView: View {
             }
         }
         .background(Color.mossBackground.ignoresSafeArea())
-        .sheet(isPresented: $isShowingEditor, onDismiss: { editingEvent = nil }) {
-            MerchantEventQuickEditor(item: editingEvent, onSave: saveEvent)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-        }
         .alert("이벤트 등록 제한", isPresented: $isShowingLimitAlert) {
             Button("확인", role: .cancel) { }
         } message: {
@@ -173,8 +191,7 @@ struct MerchantEventManagementView: View {
 
     private func eventCard(_ event: MerchantEventRecord) -> some View {
         Button {
-            editingEvent = event
-            isShowingEditor = true
+            onEdit(event)
         } label: {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -274,118 +291,5 @@ struct MerchantEventManagementView: View {
     private func addEvent() {
         guard canCreate else { isShowingLimitAlert = true; return }
         onCreate()
-    }
-
-    private func saveEvent(_ event: MerchantEventRecord) {
-        withAnimation(.spring(response: 0.34, dampingFraction: 0.82)) {
-            if let index = events.firstIndex(where: { $0.id == event.id }) {
-                events[index] = event
-            } else {
-                events.insert(event, at: 0)
-                weeklyEventCount += 1
-            }
-            selectedFilter = event.status == .ended ? .ended : event.status == .pending ? .pending : .ongoing
-        }
-        isShowingEditor = false
-    }
-}
-
-private struct MerchantEventQuickEditor: View {
-    @Environment(\.dismiss) private var dismiss
-    let item: MerchantEventRecord?
-    let onSave: (MerchantEventRecord) -> Void
-
-    @State private var title: String
-    @State private var dateRange: String
-    @State private var timeRange: String
-    @State private var details: String
-    @State private var hasAttemptedSave = false
-    @FocusState private var focusedField: Field?
-
-    private enum Field: Hashable { case title, dateRange, timeRange, details }
-
-    init(item: MerchantEventRecord?, onSave: @escaping (MerchantEventRecord) -> Void) {
-        self.item = item
-        self.onSave = onSave
-        _title = State(initialValue: item?.title ?? "")
-        _dateRange = State(initialValue: item?.dateRange ?? "10.15–10.21")
-        _timeRange = State(initialValue: item?.timeRange ?? "매일 10:00–16:00")
-        _details = State(initialValue: item?.details ?? "")
-    }
-
-    private var errorMessage: String? {
-        guard hasAttemptedSave else { return nil }
-        return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "이벤트 제목을 입력해 주세요." : nil
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text(item == nil ? "새 이벤트 등록" : "이벤트 수정")
-                    .font(.system(size: 17, weight: .heavy))
-                    .foregroundStyle(Color.mossTextPrimary)
-                Spacer()
-                Button("닫기") { dismiss() }
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.mossBrandSage)
-            }
-            editorField("이벤트 제목", text: $title, prompt: "예: 오전 집중석 이벤트", field: .title)
-            editorField("기간", text: $dateRange, prompt: "10.15–10.21", field: .dateRange)
-            editorField("시간", text: $timeRange, prompt: "매일 10:00–16:00", field: .timeRange)
-            editorField("설명", text: $details, prompt: "이벤트 내용을 입력해 주세요", field: .details)
-            if let errorMessage {
-                Label(errorMessage, systemImage: "exclamationmark.circle.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.mossError)
-            }
-            Button(action: save) {
-                Text(item == nil ? "이벤트 등록" : "수정 저장")
-                    .font(.system(size: 14, weight: .heavy))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(Color.mossDarkAction, in: RoundedRectangle(cornerRadius: 12))
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.mossBackground.ignoresSafeArea())
-        .scrollDismissesKeyboard(.interactively)
-        .background {
-            Color.clear.contentShape(Rectangle()).onTapGesture { focusedField = nil }
-        }
-        .animation(.easeInOut(duration: 0.2), value: hasAttemptedSave)
-    }
-
-    private func editorField(_ label: String, text: Binding<String>, prompt: String, field: Field) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Color.mossBrandSage)
-            TextField(prompt, text: text)
-                .font(.system(size: 13))
-                .focused($focusedField, equals: field)
-                .padding(.horizontal, 13)
-                .frame(height: 44)
-                .background(Color.mossSurface, in: RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(errorMessage == nil ? Color.mossLine : Color.mossError, lineWidth: 1))
-        }
-    }
-
-    private func save() {
-        focusedField = nil
-        hasAttemptedSave = true
-        let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanTitle.isEmpty else { return }
-        onSave(MerchantEventRecord(
-            id: item?.id ?? UUID().uuidString,
-            title: cleanTitle,
-            dateRange: dateRange,
-            timeRange: timeRange,
-            details: details,
-            status: item?.status ?? .pending
-        ))
-        dismiss()
     }
 }
