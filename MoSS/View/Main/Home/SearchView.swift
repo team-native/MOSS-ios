@@ -20,7 +20,7 @@ struct SearchView: View {
     private var filteredPlaces: [Place] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         let matches = Place.preview.filter { place in
-            let matchesQuery = query.isEmpty || place.name.localizedCaseInsensitiveContains(query) || place.details.localizedCaseInsensitiveContains(query)
+            let matchesQuery = query.isEmpty || place.name.localizedCaseInsensitiveContains(query) || place.details.localizedCaseInsensitiveContains(query) || place.address.localizedCaseInsensitiveContains(query)
             let matchesNoise = noiseLevel != "조용함" || place.noiseLevel != "보통"
             let matchesDistance = distanceValue.map { (Int(place.distance.replacingOccurrences(of: "m", with: "")) ?? .max) <= $0 } ?? true
             let price = Int(place.price.filter(\.isNumber)) ?? .max
