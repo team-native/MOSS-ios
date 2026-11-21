@@ -26,6 +26,7 @@ struct MerchantWorkspaceView: View {
     @State private var selectedStoreDestination: MerchantStoreDestination?
     @State private var operationInfoDraft = MerchantOperationInfoDraft.sample
     @State private var storeInfoDraft = MerchantStoreInfoDraft()
+    @State private var storePolicyDraft = MerchantStorePolicyDraft()
     @State private var replyDrafts: [String: String] = [:]
     @State private var isShowingReviewReport = false
     @State private var submittedReport: MerchantReportSubmission?
@@ -114,6 +115,11 @@ struct MerchantWorkspaceView: View {
                         }
                     }
                 )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if let selectedStoreDestination, selectedStoreDestination == .settings {
+                MerchantStorePolicyEditView(draft: $storePolicyDraft) {
+                    withAnimation(.snappy(duration: 0.25)) { self.selectedStoreDestination = nil }
+                }
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             } else if let selectedStoreDestination, selectedStoreDestination == .basicInfo {
                 MerchantStoreInfoEditView(draft: $storeInfoDraft) {
