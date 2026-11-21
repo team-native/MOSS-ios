@@ -4,10 +4,10 @@ struct PlaceDetailView: View {
     let place: Place
     let onBack: () -> Void
     let onShowReviews: () -> Void
+    let onWriteReview: () -> Void
     let onReport: () -> Void
 
     @State private var isFavorite = false
-    @State private var alertMessage: String?
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -21,11 +21,6 @@ struct PlaceDetailView: View {
         }
         .background(Color.mossBackground.ignoresSafeArea())
         .ignoresSafeArea(edges: .top)
-        .alert("알림", isPresented: alertBinding) {
-            Button("확인", role: .cancel) { alertMessage = nil }
-        } message: {
-            Text(alertMessage ?? "")
-        }
     }
 
     private var heroCover: some View {
@@ -175,9 +170,7 @@ struct PlaceDetailView: View {
 
     private var actionButtons: some View {
         HStack(spacing: 8) {
-            Button {
-                alertMessage = "리뷰 작성은 준비 중이에요."
-            } label: {
+            Button(action: onWriteReview) {
                 Label("리뷰 작성", systemImage: "pencil")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white)
@@ -248,10 +241,4 @@ struct PlaceDetailView: View {
             .foregroundStyle(Color.mossTextPrimary)
     }
 
-    private var alertBinding: Binding<Bool> {
-        Binding(
-            get: { alertMessage != nil },
-            set: { if !$0 { alertMessage = nil } }
-        )
-    }
 }

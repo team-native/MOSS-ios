@@ -58,16 +58,17 @@ struct PlaceReview: Identifiable {
 
 struct ReviewListView: View {
     let place: Place
+    @Binding var submittedReviews: [PlaceReview]
     @Binding var removedReviewIDs: Set<String>
     @Binding var editedReviews: [String: PlaceReview]
     let onBack: () -> Void
     let onSelectReview: (PlaceReview) -> Void
+    let onWriteReview: () -> Void
 
     @State private var sortOrder = "최신순"
-    @State private var isShowingWriteNotice = false
 
     private var reviews: [PlaceReview] {
-        let visibleReviews = PlaceReview.preview
+        let visibleReviews = (submittedReviews + PlaceReview.preview)
             .filter { !removedReviewIDs.contains($0.id) }
             .map { editedReviews[$0.id] ?? $0 }
         switch sortOrder {
@@ -99,9 +100,7 @@ struct ReviewListView: View {
         }
         .background(Color.mossBackground.ignoresSafeArea())
         .overlay(alignment: .bottomTrailing) {
-            Button {
-                isShowingWriteNotice = true
-            } label: {
+            Button(action: onWriteReview) {
                 Image(systemName: "plus")
                     .font(.system(size: 23, weight: .semibold))
                     .foregroundStyle(.white)
@@ -112,11 +111,6 @@ struct ReviewListView: View {
             .accessibilityLabel("리뷰 작성")
             .padding(.trailing, 24)
             .padding(.bottom, 24)
-        }
-        .alert("리뷰 작성", isPresented: $isShowingWriteNotice) {
-            Button("확인", role: .cancel) { }
-        } message: {
-            Text("리뷰 작성 화면은 다음 퍼블리싱 단계에서 연결할게요.")
         }
     }
 
