@@ -82,6 +82,17 @@ struct ReviewListView: View {
     }
 
     var body: some View {
+        Group {
+            if reviews.isEmpty {
+                ReviewEmptyView(place: place, onBack: onBack, onWriteReview: onWriteReview)
+            } else {
+                populatedReviewList
+            }
+        }
+        .background(Color.mossBackground.ignoresSafeArea())
+    }
+
+    private var populatedReviewList: some View {
         VStack(spacing: 0) {
             header
             ScrollView(showsIndicators: false) {
@@ -98,7 +109,6 @@ struct ReviewListView: View {
                 .padding(.bottom, 88)
             }
         }
-        .background(Color.mossBackground.ignoresSafeArea())
         .overlay(alignment: .bottomTrailing) {
             Button(action: onWriteReview) {
                 Image(systemName: "plus")

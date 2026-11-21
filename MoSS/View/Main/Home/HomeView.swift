@@ -21,6 +21,10 @@ struct HomeView: View {
 
     private let places = Place.preview
 
+    private var hasVisibleReviews: Bool {
+        (submittedReviews + PlaceReview.preview).contains { !removedReviewIDs.contains($0.id) }
+    }
+
     var body: some View {
         Group {
             if isShowingReviewWrite, let selectedPlace {
@@ -149,7 +153,7 @@ struct HomeView: View {
         }
         .background(Color.mossBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !isShowingReviewDeleteConfirmation && !isShowingInfoErrorReport && !isShowingReviewWrite && (!isShowingReviewList || selectedReview != nil) {
+            if !isShowingReviewDeleteConfirmation && !isShowingInfoErrorReport && !isShowingReviewWrite && (!isShowingReviewList || selectedReview != nil || !hasVisibleReviews) {
                 bottomNavigation
             }
         }
