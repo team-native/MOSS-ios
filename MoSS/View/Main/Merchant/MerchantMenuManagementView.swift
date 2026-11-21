@@ -356,7 +356,7 @@ private struct MerchantMenuEditorView: View {
                 .font(.system(size: 14))
                 .foregroundStyle(Color.mossTextPrimary)
                 .keyboardType(field == .price ? .numberPad : .default)
-                .textInputAutocapitalization(field == .name ? .never : .never)
+                .textInputAutocapitalization(.never)
                 .focused($focusedField, equals: field)
                 .padding(.horizontal, 14)
                 .frame(height: 48)
@@ -410,13 +410,15 @@ private struct MerchantMenuEditorView: View {
     private func save() {
         dismissKeyboard()
         hasAttemptedSave = true
-        guard nameError == nil, priceError == nil, let price = Int(priceText) else {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parsedPrice = Int(priceText)
+        guard trimmedName.count >= 2, let price = parsedPrice, price > 0 else {
             validationErrorPulse += 1
             return
         }
         let updated = MerchantMenuItem(
             id: item?.id ?? UUID().uuidString,
-            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            name: trimmedName,
             price: price,
             photoName: item?.photoName ?? "MerchantMenuAmericano",
             isVisible: isVisible,
