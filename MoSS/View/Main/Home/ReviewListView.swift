@@ -1,6 +1,6 @@
 import SwiftUI
 
-private struct PlaceReview: Identifiable {
+struct PlaceReview: Identifiable {
     let id: String
     let author: String
     let date: String
@@ -9,6 +9,9 @@ private struct PlaceReview: Identifiable {
     let body: String
     let avatar: String
     let ownerReply: String?
+    let photoAssets: [String]
+    let helpfulCount: Int
+    let isMine: Bool
 
     static let preview = [
         PlaceReview(
@@ -19,7 +22,10 @@ private struct PlaceReview: Identifiable {
             noise: "매우 조용",
             body: "매장이 너무 조용해서 좋습니다. 푸드존에선 술이랑 안주도 먹으면서 공부를 할 수 있어서 졸릴 때 자주 애용합니다. 여기서 술 자격증 땄습니다. 항상 감사합니다 사장님^^",
             avatar: "ReviewAvatarOne",
-            ownerReply: "방문해 주셔서 감사합니다! 앞으로도 이용하시기 더 좋은 환경으로 만들어 나가겠습니다. 자주 이용해 주세요!"
+            ownerReply: "방문해 주셔서 감사합니다! 앞으로도 이용하시기 더 좋은 환경으로 만들어 나가겠습니다. 자주 이용해 주세요!",
+            photoAssets: ["ReviewPhotoOne", "ReviewPhotoTwo"],
+            helpfulCount: 8,
+            isMine: true
         ),
         PlaceReview(
             id: "dotoriclub",
@@ -29,7 +35,10 @@ private struct PlaceReview: Identifiable {
             noise: "매우 조용",
             body: "야하—!! 야하하!! 우라라라라!! 뿌룹—! 와하!! 얌얌얌!! 우라! 얌얌!! 우라라라!! 야하—!!",
             avatar: "ReviewAvatarTwo",
-            ownerReply: nil
+            ownerReply: nil,
+            photoAssets: [],
+            helpfulCount: 3,
+            isMine: false
         ),
         PlaceReview(
             id: "quiet-study",
@@ -39,26 +48,32 @@ private struct PlaceReview: Identifiable {
             noise: "조용함",
             body: "좌석 간격이 넓고 집중하기 좋아요. 콘센트가 가까워 노트북 사용하기 편했습니다.",
             avatar: "MockProfile",
-            ownerReply: nil
+            ownerReply: nil,
+            photoAssets: [],
+            helpfulCount: 2,
+            isMine: false
         )
     ]
 }
 
 struct ReviewListView: View {
     let place: Place
+    @Binding var removedReviewIDs: Set<String>
     let onBack: () -> Void
+    let onSelectReview: (PlaceReview) -> Void
 
     @State private var sortOrder = "최신순"
     @State private var isShowingWriteNotice = false
 
     private var reviews: [PlaceReview] {
+        let visibleReviews = PlaceReview.preview.filter { !removedReviewIDs.contains($0.id) }
         switch sortOrder {
         case "별점 높은순":
-            return PlaceReview.preview.sorted { (Double($0.rating) ?? 0) > (Double($1.rating) ?? 0) }
+            return visibleReviews.sorted { (Double($0.rating) ?? 0) > (Double($1.rating) ?? 0) }
         case "별점 낮은순":
-            return PlaceReview.preview.sorted { (Double($0.rating) ?? 0) < (Double($1.rating) ?? 0) }
+            return visibleReviews.sorted { (Double($0.rating) ?? 0) < (Double($1.rating) ?? 0) }
         default:
-            return PlaceReview.preview
+            return visibleReviews
         }
     }
 
@@ -204,62 +219,67 @@ struct ReviewListView: View {
     }
 
     private func reviewCard(_ review: PlaceReview) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                HStack(spacing: 8) {
-                    Image(review.avatar)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 28, height: 28)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(review.author)
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.mossTextPrimary)
-                        Text(review.date)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(Color.mossTextMuted)
+        Button {
+            onSelectReview(review)
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(review.avatar)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 28, height: 28)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(review.author)
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(Color.mossTextPrimary)
+                            Text(review.date)
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color.mossTextMuted)
+                        }
                     }
+                    Spacer()
+                    Label(review.rating, systemImage: "star.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color.mossTextPrimary)
+                        .labelStyle(.titleAndIcon)
+                        .tint(Color.mossWarning)
                 }
-                Spacer()
-                Label(review.rating, systemImage: "star.fill")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Color.mossTextPrimary)
-                    .labelStyle(.titleAndIcon)
-                    .tint(Color.mossWarning)
-            }
 
-            Text(review.noise)
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(Color.mossDeepGreen)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.mossSageTint, in: RoundedRectangle(cornerRadius: 6))
+                Text(review.noise)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color.mossDeepGreen)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.mossSageTint, in: RoundedRectangle(cornerRadius: 6))
 
-            Text(review.body)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.mossBrandSage)
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
+                Text(review.body)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.mossBrandSage)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            if let ownerReply = review.ownerReply {
-                VStack(alignment: .leading, spacing: 4) {
-                    Label("\(place.name) 업주", systemImage: "arrow.turn.down.right")
-                        .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(Color.mossPrimaryGreen)
-                    Text(ownerReply)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.mossBrandSage)
-                        .lineSpacing(3)
-                        .fixedSize(horizontal: false, vertical: true)
+                if let ownerReply = review.ownerReply {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label("\(place.name) 업주", systemImage: "arrow.turn.down.right")
+                            .font(.system(size: 11, weight: .heavy))
+                            .foregroundStyle(Color.mossPrimaryGreen)
+                        Text(ownerReply)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color.mossBrandSage)
+                            .lineSpacing(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 12))
                 }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 12))
             }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.mossSurface, in: RoundedRectangle(cornerRadius: 16))
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.mossSurface, in: RoundedRectangle(cornerRadius: 16))
+        .buttonStyle(.plain)
     }
 }

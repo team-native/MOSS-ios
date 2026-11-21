@@ -5,6 +5,9 @@ struct HomeView: View {
     @State private var selectedTab = "홈"
     @State private var searchText = ""
     @State private var selectedPlace: Place?
+    @State private var selectedReview: PlaceReview?
+    @State private var removedReviewIDs: Set<String> = []
+    @State private var isShowingReviewDeleteConfirmation = false
     @State private var isShowingLocationPermission = false
     @State private var isShowingReviewList = false
 
@@ -12,10 +15,25 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            if isShowingReviewList, let selectedPlace {
-                ReviewListView(place: selectedPlace) {
-                    isShowingReviewList = false
-                }
+            if let selectedReview, let selectedPlace {
+                ReviewDetailView(
+                    place: selectedPlace,
+                    review: selectedReview,
+                    isShowingDeleteConfirmation: $isShowingReviewDeleteConfirmation,
+                    onBack: { self.selectedReview = nil },
+                    onDelete: {
+                        removedReviewIDs.insert(selectedReview.id)
+                        isShowingReviewDeleteConfirmation = false
+                        self.selectedReview = nil
+                    }
+                )
+            } else if isShowingReviewList, let selectedPlace {
+                ReviewListView(
+                    place: selectedPlace,
+                    removedReviewIDs: $removedReviewIDs,
+                    onBack: { isShowingReviewList = false },
+                    onSelectReview: { selectedReview = $0 }
+                )
             } else if isShowingLocationPermission {
                 LocationPermissionView(
                     searchText: $searchText,
@@ -62,7 +80,7 @@ struct HomeView: View {
         }
         .background(Color.mossBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !isShowingReviewList {
+            if !isShowingReviewDeleteConfirmation && (!isShowingReviewList || selectedReview != nil) {
                 bottomNavigation
             }
         }
@@ -263,6 +281,8 @@ struct HomeView: View {
 
     private func tabItem(_ title: String, icon: String) -> some View {
         Button {
+            isShowingReviewDeleteConfirmation = false
+            selectedReview = nil
             isShowingReviewList = false
             isShowingLocationPermission = false
             selectedPlace = nil
