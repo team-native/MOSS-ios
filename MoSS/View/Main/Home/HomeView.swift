@@ -23,6 +23,7 @@ struct HomeView: View {
     @State private var isReturningToMyReviewList = false
     @State private var isShowingReportHistory = false
     @State private var selectedReport: ReportRecord?
+    @State private var isShowingAccountDeletionComplete = false
 
     private let places = Place.preview
 
@@ -33,7 +34,11 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            if isShowingReviewWrite, let selectedPlace {
+            if isShowingAccountDeletionComplete {
+                AccountDeletionCompleteView(
+                    onBack: { isShowingAccountDeletionComplete = false }
+                )
+            } else if isShowingReviewWrite, let selectedPlace {
                 ReviewWriteView(
                     place: selectedPlace,
                     onClose: { isShowingReviewWrite = false },
@@ -188,7 +193,8 @@ struct HomeView: View {
                 MyPageView(
                     onShowFavorites: { selectedTab = "찜" },
                     onShowMyReviews: { isShowingMyReviewList = true },
-                    onShowReportHistory: { isShowingReportHistory = true }
+                    onShowReportHistory: { isShowingReportHistory = true },
+                    onAccountDeletionComplete: { isShowingAccountDeletionComplete = true }
                 )
             } else {
                 ComingSoonView(title: selectedTab)
