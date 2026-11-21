@@ -42,6 +42,12 @@ struct MerchantReviewRecord: Identifiable, Equatable {
 
 struct MerchantReviewManagementView: View {
     let onSelectReview: (MerchantReviewRecord) -> Void
+    let replyDrafts: [String: String]
+
+    init(replyDrafts: [String: String] = [:], onSelectReview: @escaping (MerchantReviewRecord) -> Void) {
+        self.replyDrafts = replyDrafts
+        self.onSelectReview = onSelectReview
+    }
 
     @State private var selectedFilter = "미답변"
     @State private var sortOrder = "최신순"
@@ -50,8 +56,8 @@ struct MerchantReviewManagementView: View {
     private var filteredReviews: [MerchantReviewRecord] {
         let reviews: [MerchantReviewRecord]
         switch selectedFilter {
-        case "미답변": reviews = MerchantReviewRecord.preview.filter { $0.reply == nil }
-        case "답변완료": reviews = MerchantReviewRecord.preview.filter { $0.reply != nil }
+        case "미답변": reviews = MerchantReviewRecord.preview.filter { effectiveReply(for: $0) == nil }
+        case "답변완료": reviews = MerchantReviewRecord.preview.filter { effectiveReply(for: $0) != nil }
         default: reviews = MerchantReviewRecord.preview
         }
         switch sortOrder {
@@ -60,6 +66,10 @@ struct MerchantReviewManagementView: View {
         case "별점 낮은순": return reviews.sorted { (Double($0.rating) ?? 0) < (Double($1.rating) ?? 0) }
         default: return reviews.sorted { $0.date > $1.date }
         }
+    }
+
+    private func effectiveReply(for review: MerchantReviewRecord) -> String? {
+        replyDrafts[review.id] ?? review.reply
     }
 
     var body: some View {
@@ -153,7 +163,17 @@ struct MerchantReviewManagementView: View {
     }
 
     private func reviewCard(_ review: MerchantReviewRecord) -> some View {
-        Button { onSelectReview(review) } label: {
+        Button {
+            onSelectReview(MerchantReviewRecord(
+                id: review.id,
+                author: review.author,
+                date: review.date,
+                rating: review.rating,
+                body: review.body,
+                hasPhoto: review.hasPhoto,
+                reply: effectiveReply(for: review)
+            ))
+        } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
@@ -188,14 +208,14 @@ struct MerchantReviewManagementView: View {
                 }
 
                 HStack {
-                    Text(review.reply == nil ? "미답변" : "답변 완료")
+                    Text(effectiveReply(for: review) == nil ? "미답변" : "답변 완료")
                         .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(review.reply == nil ? Color(hex: 0x7A4E1B) : Color.mossPrimaryGreen)
+                        .foregroundStyle(effectiveReply(for: review) == nil ? Color(hex: 0x7A4E1B) : Color.mossPrimaryGreen)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
-                        .background(review.reply == nil ? Color(hex: 0xFFF8ED) : Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 8))
+                        .background(effectiveReply(for: review) == nil ? Color(hex: 0xFFF8ED) : Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 8))
                     Spacer()
-                    Text(review.reply == nil ? "답변하기" : "답변 보기")
+                    Text(effectiveReply(for: review) == nil ? "답변하기" : "답변 보기")
                         .font(.system(size: 12, weight: .heavy))
                         .foregroundStyle(Color.mossPrimaryGreen)
                 }
