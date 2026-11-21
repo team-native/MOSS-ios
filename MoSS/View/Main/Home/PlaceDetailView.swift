@@ -3,6 +3,7 @@ import SwiftUI
 struct PlaceDetailView: View {
     let place: Place
     let onBack: () -> Void
+    let onShowReviews: () -> Void
 
     @State private var isFavorite = false
     @State private var alertMessage: String?
@@ -210,10 +211,8 @@ struct PlaceDetailView: View {
             HStack {
                 sectionTitle("최근 리뷰 (127개)")
                 Spacer()
-                Button("전체 보기") {
-                    alertMessage = "리뷰 목록은 다음 퍼블리싱 단계에서 연결할게요."
-                }
-                .font(.system(size: 12, weight: .bold))
+                Button("전체 보기", action: onShowReviews)
+                    .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(Color.mossPrimaryGreen)
             }
             reviewCard(name: "제초 5급 노리는 햄스터", rating: "4.8", body: "시끄러운 토끼도 없고 조용해서 너무 좋아요!! 귀여운 사자가 가끔 라멘도 줘서 행복하게 공부가 잘 됩니당")

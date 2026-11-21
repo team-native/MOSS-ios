@@ -6,12 +6,17 @@ struct HomeView: View {
     @State private var searchText = ""
     @State private var selectedPlace: Place?
     @State private var isShowingLocationPermission = false
+    @State private var isShowingReviewList = false
 
     private let places = Place.preview
 
     var body: some View {
         Group {
-            if isShowingLocationPermission {
+            if isShowingReviewList, let selectedPlace {
+                ReviewListView(place: selectedPlace) {
+                    isShowingReviewList = false
+                }
+            } else if isShowingLocationPermission {
                 LocationPermissionView(
                     searchText: $searchText,
                     onBack: { isShowingLocationPermission = false },
@@ -21,9 +26,11 @@ struct HomeView: View {
                     }
                 )
             } else if let selectedPlace {
-                PlaceDetailView(place: selectedPlace) {
-                    self.selectedPlace = nil
-                }
+                PlaceDetailView(
+                    place: selectedPlace,
+                    onBack: { self.selectedPlace = nil },
+                    onShowReviews: { isShowingReviewList = true }
+                )
             } else if selectedTab == "홈" {
                 if session.isGuest {
                     GuestPreviewView(
@@ -54,7 +61,11 @@ struct HomeView: View {
             }
         }
         .background(Color.mossBackground.ignoresSafeArea())
-        .safeAreaInset(edge: .bottom, spacing: 0) { bottomNavigation }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !isShowingReviewList {
+                bottomNavigation
+            }
+        }
     }
 
     private var homeContent: some View {
@@ -252,6 +263,7 @@ struct HomeView: View {
 
     private func tabItem(_ title: String, icon: String) -> some View {
         Button {
+            isShowingReviewList = false
             isShowingLocationPermission = false
             selectedPlace = nil
             selectedTab = title
