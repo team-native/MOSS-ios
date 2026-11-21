@@ -5,12 +5,22 @@ struct HomeView: View {
     @State private var selectedTab = "홈"
     @State private var searchText = ""
     @State private var selectedPlace: Place?
+    @State private var isShowingLocationPermission = false
 
     private let places = Place.preview
 
     var body: some View {
         Group {
-            if let selectedPlace {
+            if isShowingLocationPermission {
+                LocationPermissionView(
+                    searchText: $searchText,
+                    onBack: { isShowingLocationPermission = false },
+                    onSearchRegion: {
+                        isShowingLocationPermission = false
+                        selectedTab = "검색"
+                    }
+                )
+            } else if let selectedPlace {
                 PlaceDetailView(place: selectedPlace) {
                     self.selectedPlace = nil
                 }
@@ -118,14 +128,14 @@ struct HomeView: View {
                     .foregroundStyle(.white, Color.mossPrimaryGreen)
                     .position(x: geometry.size.width * 0.45, y: geometry.size.height * 0.62)
 
-                Button {} label: {
+                Button { isShowingLocationPermission = true } label: {
                     Image(systemName: "location.north.circle.fill")
                         .font(.system(size: 42))
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(Color.mossPrimaryGreen, .white)
                 }
                 .position(x: geometry.size.width - 42, y: geometry.size.height - 42)
-                .accessibilityLabel("현재 위치로 이동")
+                .accessibilityLabel("위치 권한 안내")
             }
         }
         .frame(height: 412)
@@ -233,6 +243,7 @@ struct HomeView: View {
 
     private func tabItem(_ title: String, icon: String) -> some View {
         Button {
+            isShowingLocationPermission = false
             selectedPlace = nil
             selectedTab = title
         } label: {
