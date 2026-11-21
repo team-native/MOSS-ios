@@ -59,6 +59,7 @@ struct PlaceReview: Identifiable {
 struct ReviewListView: View {
     let place: Place
     @Binding var removedReviewIDs: Set<String>
+    @Binding var editedReviews: [String: PlaceReview]
     let onBack: () -> Void
     let onSelectReview: (PlaceReview) -> Void
 
@@ -66,7 +67,9 @@ struct ReviewListView: View {
     @State private var isShowingWriteNotice = false
 
     private var reviews: [PlaceReview] {
-        let visibleReviews = PlaceReview.preview.filter { !removedReviewIDs.contains($0.id) }
+        let visibleReviews = PlaceReview.preview
+            .filter { !removedReviewIDs.contains($0.id) }
+            .map { editedReviews[$0.id] ?? $0 }
         switch sortOrder {
         case "별점 높은순":
             return visibleReviews.sorted { (Double($0.rating) ?? 0) > (Double($1.rating) ?? 0) }
