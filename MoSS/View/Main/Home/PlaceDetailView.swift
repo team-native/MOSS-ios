@@ -80,7 +80,7 @@ struct PlaceDetailView: View {
                         .padding(.vertical, 4)
                         .background(Color.mossSageTint, in: RoundedRectangle(cornerRadius: 6))
                 }
-                Text("\(place.address) (용봉동)")
+                Text(place.address)
                     .font(.system(size: 13))
                     .foregroundStyle(Color.mossBrandSage)
                     .lineLimit(1)
