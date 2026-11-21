@@ -31,7 +31,8 @@ struct MerchantWorkspaceView: View {
     @State private var submittedReport: MerchantReportSubmission?
     @State private var isShowingReportStatus = false
     @State private var isShowingBusinessVerification = false
-    @State private var isShowingVerificationSubmissionNotice = false
+    @State private var isShowingVerificationPending = false
+    @State private var submittedVerification: MerchantBusinessVerificationSubmission?
 
     var body: some View {
         Group {
@@ -40,9 +41,29 @@ struct MerchantWorkspaceView: View {
                     onBack: {
                         withAnimation(.snappy(duration: 0.25)) { isShowingBusinessVerification = false }
                     },
-                    onSubmit: {
-                        withAnimation(.snappy(duration: 0.25)) { isShowingBusinessVerification = false }
-                        isShowingVerificationSubmissionNotice = true
+                    onSubmit: { submission in
+                        withAnimation(.snappy(duration: 0.28)) {
+                            submittedVerification = submission
+                            isShowingBusinessVerification = false
+                            isShowingVerificationPending = true
+                        }
+                    }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else if isShowingVerificationPending, let submittedVerification {
+                MerchantVerificationPendingView(
+                    submission: submittedVerification,
+                    onBack: {
+                        withAnimation(.snappy(duration: 0.25)) {
+                            isShowingVerificationPending = false
+                            isShowingBusinessVerification = true
+                        }
+                    },
+                    onResubmitDocuments: {
+                        withAnimation(.snappy(duration: 0.25)) {
+                            isShowingVerificationPending = false
+                            isShowingBusinessVerification = true
+                        }
                     }
                 )
                 .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -182,11 +203,6 @@ struct MerchantWorkspaceView: View {
             merchantTabBar
         }
         .background(Color.mossBackground.ignoresSafeArea())
-        .alert("인증 신청 접수 (미리보기)", isPresented: $isShowingVerificationSubmissionNotice) {
-            Button("확인", role: .cancel) { }
-        } message: {
-            Text("인증 신청은 로컬 미리보기로만 처리했습니다. 사업자 정보 조회 및 파일 전송은 진행되지 않았습니다.")
-        }
     }
 
     private var merchantTabBar: some View {
@@ -195,6 +211,8 @@ struct MerchantWorkspaceView: View {
                 Button {
                     selectedTab = tab
                     isShowingBusinessVerification = false
+                    isShowingVerificationPending = false
+                    submittedVerification = nil
                     selectedReview = nil
                     selectedReplyEdit = nil
                     selectedStoreDestination = nil
