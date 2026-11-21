@@ -64,40 +64,110 @@ struct SearchView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     searchBar(placeholder: "장소를 검색해 보세요", allowsClear: true)
                     appliedFilters
-                    HStack {
-                        Text("필터 적용 결과 \(filteredPlaces.count)개")
-                            .font(.system(size: 14, weight: .heavy))
-                            .foregroundStyle(Color.mossTextPrimary)
-                        Spacer()
-                        Menu {
-                            ForEach(["거리순", "조용한순", "가격 낮은순"], id: \.self) { option in
-                                Button(option) { sortOrder = option }
-                            }
-                        } label: {
-                            Label(sortOrder, systemImage: "chevron.down")
-                                .font(.system(size: 12, weight: .bold))
-                                .labelStyle(.titleAndIcon)
-                                .foregroundStyle(Color.mossPrimaryGreen)
-                        }
-                    }
 
                     if filteredPlaces.isEmpty {
-                        ContentUnavailableView.search(text: searchText)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 48)
+                        searchEmptyState
                     } else {
+                        HStack {
+                            Text("필터 적용 결과 \(filteredPlaces.count)개")
+                                .font(.system(size: 14, weight: .heavy))
+                                .foregroundStyle(Color.mossTextPrimary)
+                            Spacer()
+                            Menu {
+                                ForEach(["거리순", "조용한순", "가격 낮은순"], id: \.self) { option in
+                                    Button(option) { sortOrder = option }
+                                }
+                            } label: {
+                                Label(sortOrder, systemImage: "chevron.down")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .labelStyle(.titleAndIcon)
+                                    .foregroundStyle(Color.mossPrimaryGreen)
+                            }
+                        }
+
                         LazyVStack(spacing: 10) {
                             ForEach(filteredPlaces) { place in
                                 PlaceCard(place: place) { onPlaceSelected(place) }
                             }
                         }
+                        advertisementCard
                     }
-
-                    advertisementCard
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 8)
                 .padding(.bottom, 20)
+            }
+        }
+    }
+
+    private var searchEmptyState: some View {
+        VStack(spacing: 14) {
+            VStack(spacing: 14) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 27, weight: .medium))
+                    .foregroundStyle(Color.mossPrimaryGreen)
+                    .frame(width: 64, height: 64)
+                    .background(Color.mossSageTint, in: RoundedRectangle(cornerRadius: 32))
+                    .overlay(alignment: .bottomTrailing) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .padding(3)
+                            .background(Color.mossSageTint, in: Circle())
+                    }
+
+                Text("조건에 맞는 장소가 없어요")
+                    .font(.system(size: 18, weight: .black))
+                    .foregroundStyle(Color.mossTextPrimary)
+                    .multilineTextAlignment(.center)
+
+                Text("거리나 가격 조건을 조금 넓히면 더 많은 공부 스팟을 찾을 수 있어요.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.mossBrandSage)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 22)
+            .padding(.top, 28)
+            .padding(.bottom, 12)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("이렇게 검색해 보세요")
+                    .font(.system(size: 14, weight: .heavy))
+                    .foregroundStyle(Color.mossTextPrimary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("· 거리를 500m 이상으로 넓히기")
+                    Text("· 무료 조건을 해제하기")
+                    Text("· 통화 전용 공간이 있는 장소 찾기")
+                }
+                .font(.system(size: 12))
+                .foregroundStyle(Color.mossBrandSage)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 16))
+
+            HStack(spacing: 10) {
+                Button(action: resetFilters) {
+                    Text("조건 초기화")
+                        .font(.system(size: 14, weight: .heavy))
+                        .foregroundStyle(Color.mossPrimaryGreen)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.mossSageSoft, in: RoundedRectangle(cornerRadius: 12))
+                }
+                Button {
+                    resetFilters()
+                    searchText = ""
+                    onBack()
+                } label: {
+                    Text("주변 장소 보기")
+                        .font(.system(size: 14, weight: .heavy))
+                        .foregroundStyle(Color.mossSurface)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.mossPrimaryGreen, in: RoundedRectangle(cornerRadius: 12))
+                }
             }
         }
     }
