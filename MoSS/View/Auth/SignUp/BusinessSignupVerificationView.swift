@@ -1,9 +1,9 @@
 import SwiftUI
 
 struct BusinessSignupVerificationView: View {
-    @State private var businessNumber = "123-45-67890"
-    @State private var ownerName = "갑옷씨"
-    @State private var openingDate = "2010.01.27"
+    @State private var businessNumber = ""
+    @State private var ownerName = ""
+    @State private var openingDate = ""
     @State private var isTermsAgreed = false
     @State private var hasAttemptedSubmit = false
     @State private var isShowingPreviewNotice = false
@@ -68,48 +68,48 @@ struct BusinessSignupVerificationView: View {
     }
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 20) {
-                introduction
-
+        GeometryReader { geometry in
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
-                    businessNumberField
-                    ownerNameField
-                    openingDateField
-                }
+                    introduction
+                        .padding(.bottom, 10)
 
-                verificationStatus
+                    VStack(alignment: .leading, spacing: 20) {
+                        businessNumberField
+                        ownerNameField
+                        openingDateField
+                    }
 
-                VStack(alignment: .leading, spacing: 6) {
-                    MoSSCheckbox(
-                        title: "모스의 필수 이용약관 및 개인정보 처리방침에 동의합니다.",
-                        isChecked: $isTermsAgreed
-                    )
-                    if let termsError {
-                        fieldError(termsError)
+                    verificationStatus
+
+                    Spacer(minLength: 24)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        MoSSCheckbox(
+                            title: "모스의 필수 이용약관 및 개인정보 처리방침에 동의합니다.",
+                            isChecked: $isTermsAgreed
+                        )
+                        if let termsError {
+                            fieldError(termsError)
+                        }
+                    }
+                    .padding(.top, 8)
+
+                    MoSSButton(title: "회원 가입 완료 · 미리보기") {
+                        focusedField = nil
+                        hasAttemptedSubmit = true
+                        if canCompletePreview {
+                            isShowingPreviewNotice = true
+                        }
                     }
                 }
-                .padding(.top, 8)
-
-                MoSSButton(title: "회원 가입 완료 · 미리보기") {
-                    focusedField = nil
-                    hasAttemptedSubmit = true
-                    if canCompletePreview {
-                        isShowingPreviewNotice = true
-                    }
-                }
-
-                Text("로컬 미리보기 전용 · 사업자 정보 조회, 계정 생성 및 승인 요청은 전송되지 않습니다.")
-                    .mossFont(.caption, weight: .regular)
-                    .foregroundStyle(Color.mossTextMuted)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
+                .padding(.horizontal, Layout.screenPadding)
+                .padding(.top, 20)
+                .padding(.bottom, 28)
+                .frame(minHeight: geometry.size.height, alignment: .top)
             }
-            .padding(.horizontal, Layout.screenPadding)
-            .padding(.top, 20)
-            .padding(.bottom, 28)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .scrollDismissesKeyboard(.interactively)
         .background {
             Color.clear
                 .contentShape(Rectangle())
@@ -167,7 +167,7 @@ struct BusinessSignupVerificationView: View {
     private var ownerNameField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldTitle("대표자명")
-            TextField("대표자명을 입력해 주세요", text: $ownerName)
+            TextField("갑옷씨", text: $ownerName)
                 .mossFont(.body, weight: .regular)
                 .textContentType(.name)
                 .focused($focusedField, equals: .ownerName)
@@ -187,7 +187,7 @@ struct BusinessSignupVerificationView: View {
     private var openingDateField: some View {
         VStack(alignment: .leading, spacing: 6) {
             fieldTitle("개업일자")
-            TextField("YYYY.MM.DD", text: $openingDate)
+            TextField("2010.01.27", text: $openingDate)
                 .mossFont(.body, weight: .regular)
                 .keyboardType(.numberPad)
                 .focused($focusedField, equals: .openingDate)
@@ -211,10 +211,10 @@ struct BusinessSignupVerificationView: View {
     private var verificationStatus: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("확인 중이에요")
+                Text("확인 상태 미리보기")
                     .mossFont(.label, weight: .bold)
                     .foregroundStyle(.white)
-                Text("사업자 확인 상태 예시")
+                Text("실제 조회나 알림은 진행되지 않아요.")
                     .mossFont(.caption, weight: .regular)
                     .foregroundStyle(Color.white.opacity(0.82))
             }
