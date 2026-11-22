@@ -201,16 +201,29 @@ final class SignUpViewModel: ObservableObject {
         }
     }
 
+    /// 사업자 가입 화면 미리보기에서 API 요청 없이 계정 입력값만 검증한다.
+    func validateForLocalBusinessPreview() -> Bool {
+        validate(requireEmailVerification: false)
+    }
+
     // MARK: - Private
 
     private func validate() -> Bool {
+        validate(requireEmailVerification: true)
+    }
+
+    private func validate(requireEmailVerification: Bool) -> Bool {
         emailError = nil
         nameError = nil
         phoneError = nil
         passwordError = nil
 
-        if !isEmailVerified {
-            emailError = "이메일 인증을 완료해 주세요."
+        if requireEmailVerification {
+            if !isEmailVerified {
+                emailError = "이메일 인증을 완료해 주세요."
+            }
+        } else if !Validator.isValidEmail(trimmedEmail) {
+            emailError = "이메일 형식이 올바르지 않습니다."
         }
         if !Validator.isValidName(name) {
             nameError = "닉네임은 2~8자로 입력해 주세요."

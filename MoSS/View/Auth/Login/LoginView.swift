@@ -33,6 +33,8 @@ struct LoginView: View {
                 switch route {
                 case .signUp:
                     SignUpView()
+                case .businessSignupVerification:
+                    BusinessSignupVerificationView()
                 case .findID:
                     FindIDView()
                 case .findIDResult(let result):

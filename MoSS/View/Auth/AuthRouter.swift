@@ -3,6 +3,7 @@ import SwiftUI
 /// 로그인 화면에서 시작하는 인증 관련 화면 이동
 enum AuthRoute: Hashable {
     case signUp
+    case businessSignupVerification
     case findID
     case findIDResult(FindIDResponse)
     case findPassword(email: String?)

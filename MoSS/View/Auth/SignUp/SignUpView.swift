@@ -31,7 +31,7 @@ struct SignUpView: View {
 
                 MoSSButton(
                     title: "회원 가입 완료",
-                    isEnabled: viewModel.canSubmit,
+                    isEnabled: viewModel.role == .business ? !viewModel.isLoading : viewModel.canSubmit,
                     isLoading: viewModel.isLoading,
                     action: signUp
                 )
@@ -92,18 +92,21 @@ struct SignUpView: View {
                 errorMessage: viewModel.emailError,
                 keyboardType: .emailAddress,
                 textContentType: .emailAddress,
-                successMessage: viewModel.isEmailVerified ? "이메일 인증이 완료되었어요." : nil,
-                isDisabled: viewModel.isEmailVerified,
-                trailingActionTitle: viewModel.isEmailVerified ? nil : viewModel.sendCodeTitle,
-                isTrailingActionEnabled: viewModel.canSendCode,
+                successMessage: viewModel.role == .student && viewModel.isEmailVerified
+                    ? "이메일 인증이 완료되었어요." : nil,
+                isDisabled: viewModel.role == .student && viewModel.isEmailVerified,
+                trailingActionTitle: viewModel.role == .student && !viewModel.isEmailVerified
+                    ? viewModel.sendCodeTitle : nil,
+                isTrailingActionEnabled: viewModel.role == .student && viewModel.canSendCode,
                 onTrailingAction: {
+                    guard viewModel.role == .student else { return }
                     focusedField = nil
                     Task { await viewModel.sendCode() }
                 }
             )
             .focused($focusedField, equals: .email)
 
-            if viewModel.isCodeSent && !viewModel.isEmailVerified {
+            if viewModel.role == .student && viewModel.isCodeSent && !viewModel.isEmailVerified {
                 MoSSTextField(
                     label: "인증번호",
                     placeholder: "인증번호를 입력해 주세요",
@@ -191,6 +194,13 @@ struct SignUpView: View {
 
     private func signUp() {
         focusedField = nil
+        if viewModel.role == .business {
+            guard viewModel.validateForLocalBusinessPreview() else { return }
+            withAnimation(.snappy(duration: 0.25)) {
+                router.push(.businessSignupVerification)
+            }
+            return
+        }
         Task { await viewModel.signUp() }
     }
 }
